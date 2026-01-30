@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hệ thống Quản lý Đào tạo - FPT Polytechnic</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
@@ -22,41 +21,35 @@
 
         <div class="steps">
             <div class="step-item active" id="step1-nav">
-                <div class="step-icon">1</div> Dữ liệu đầu vào
+                <div class="step-icon">1</div> Danh sách Môn học
             </div>
             <div class="step-item" id="step2-nav">
                 <div class="step-icon">2</div> Xử lý AI
             </div>
             <div class="step-item" id="step3-nav">
-                <div class="step-icon">3</div> Kết quả & Điều chỉnh
+                <div class="step-icon">3</div> Kết quả Tối ưu
             </div>
         </div>
 
         <div id="section-input" class="section active">
-            <div class="card">
-                <div class="form-group">
-                    <label class="form-label">Chọn kỳ học / Block</label>
+            <div class="input-toolbar">
+                <div class="form-group" style="margin-bottom: 0; flex: 1;">
                     <select class="form-control">
                         <option>Spring 2026 - Block 1</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Số lượng sinh viên dự kiến</label>
-                    <input type="number" class="form-control" value="1500">
+                <button class="btn btn-outline"><i class="fa-solid fa-file-excel"></i> Import Excel</button>
+                <div style="flex: 2; text-align: right; font-size: 14px; color: #666;">
+                    Đã tải lên: <strong>5 môn</strong> | Tổng sinh viên: <strong>1,500</strong>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Tải lên file cấu trúc ngành (.xlsx)</label>
-                    <input type="file" class="form-control">
+            </div>
+
+            <div id="inputListContainer" class="course-list">
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Ràng buộc nghiệp vụ</label>
-                    <div style="display: flex; gap: 10px;">
-                        <span style="background:#d4edda; color:#155724; padding:5px 10px; border-radius:15px; font-size:12px">Không trùng phòng</span>
-                        <span style="background:#d4edda; color:#155724; padding:5px 10px; border-radius:15px; font-size:12px">Ưu tiên tòa F</span>
-                    </div>
-                </div>
+
+            <div style="margin-top: 20px; text-align: right;">
                 <button class="btn btn-primary" onclick="goToAI()">
-                    <i class="fa-solid fa-robot"></i> Chạy phân tích AI
+                    <i class="fa-solid fa-robot"></i> Tiếp tục: Chạy Phân Tích AI
                 </button>
             </div>
         </div>
@@ -64,26 +57,26 @@
         <div id="section-ai" class="section">
             <div class="ai-loading">
                 <i class="fa-solid fa-gear spinner"></i>
-                <h3>AI đang tối ưu hóa lịch biểu...</h3>
-                <p style="color: #666">Đang phân tích 150 lớp học và 40 phòng học khả dụng.</p>
+                <h3>AI đang tính toán phương án tối ưu...</h3>
+                <p style="color: #666">Đang xử lý ràng buộc: Không trùng phòng, Ưu tiên tòa F.</p>
             </div>
         </div>
 
         <div id="section-result" class="section">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <p>AI đã đề xuất <strong>4 lớp học</strong> cần xem xét. Nhấn vào từng lớp để chỉnh sửa.</p>
-                <button class="btn btn-success" onclick="alert('Đã đồng bộ lịch lên hệ thống AP!')"><i class="fa-solid fa-check-double"></i> Chốt lịch & Đồng bộ</button>
+            <div class="result-header">
+                <h3><i class="fa-solid fa-check-circle" style="color: #27ae60;"></i> Xếp lịch thành công!</h3>
+                <p>Độ tối ưu: <strong>98.5%</strong> | Xung đột: <span style="color: red;">0</span></p>
             </div>
-
-            <div class="course-list" id="courseListContainer">
+            <div class="course-list" id="resultListContainer">
                 </div>
+            <button class="btn btn-success" style="margin-top: 20px;" onclick="alert('Đã lưu!')">Phê duyệt & Đồng bộ</button>
         </div>
     </div>
 
     <div class="modal-overlay" id="editModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3><i class="fa-solid fa-pen-to-square"></i> Chi tiết lớp học</h3>
+                <h3><i class="fa-solid fa-pen-to-square"></i> Chi tiết Môn học</h3>
                 <span class="close-btn" onclick="closeModal()">&times;</span>
             </div>
             
@@ -91,56 +84,58 @@
                 <input type="hidden" id="edit-id">
                 
                 <div class="form-group">
-                    <label class="form-label">Tên môn học / Mã lớp</label>
-                    <input type="text" class="form-control" id="edit-name" readonly style="background: #f9f9f9;">
+                    <label class="form-label">Tên môn học</label>
+                    <input type="text" class="form-control" id="edit-name" style="font-weight: bold; color: var(--primary);">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Mã lớp / Mã học phần</label>
+                    <input type="text" class="form-control" id="edit-code">
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div class="form-group">
-                        <label class="form-label">Giảng viên</label>
+                        <label class="form-label">Giảng viên dự kiến</label>
                         <select class="form-control" id="edit-teacher">
                             <option value="Nguyễn Lan Oanh">Nguyễn Lan Oanh</option>
                             <option value="Tô Hữu Nguyên">Tô Hữu Nguyên</option>
                             <option value="Phạm Thị Thương">Phạm Thị Thương</option>
+                            <option value="Nguyễn Văn Núi">Nguyễn Văn Núi</option>
+                            <option value="Bùi Ngọc Tuấn">Bùi Ngọc Tuấn</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Phòng học</label>
+                        <label class="form-label">Phòng học ưu tiên</label>
                         <select class="form-control" id="edit-room">
-                            <option value="F301">F301 (Tòa F)</option>
-                            <option value="F302">F302 (Tòa F)</option>
-                            <option value="P201">P201 (Tòa P)</option>
+                            <option value="F301">F301</option>
+                            <option value="F302">F302</option>
+                            <option value="P201">P201</option>
+                            <option value="Online">Online</option>
                         </select>
                     </div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div class="form-group">
-                        <label class="form-label">Ca học</label>
-                        <select class="form-control" id="edit-shift">
-                            <option value="Ca 1">Ca 1 (7:30 - 9:30)</option>
-                            <option value="Ca 2">Ca 2 (9:40 - 11:40)</option>
-                            <option value="Ca 3">Ca 3 (12:30 - 14:30)</option>
-                        </select>
+                        <label class="form-label">Số tín chỉ</label>
+                        <input type="number" class="form-control" id="edit-credits">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Thứ</label>
-                        <select class="form-control" id="edit-days">
-                            <option value="2-4-6">Thứ 2 - 4 - 6</option>
-                            <option value="3-5-7">Thứ 3 - 5 - 7</option>
-                        </select>
+                        <label class="form-label">Số tuần học</label>
+                        <input type="text" class="form-control" id="edit-weeks">
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Ghi chú xung đột AI</label>
-                    <div style="background: #fff3cd; color: #856404; padding: 10px; border-radius: 5px; font-size: 13px;">
-                        <i class="fa-solid fa-triangle-exclamation"></i> Lưu ý: Nếu đổi sang Ca 2, GV Nguyễn Lan Oanh sẽ dạy 4 ca liên tiếp.
+                    <label class="form-label">Ràng buộc đặc biệt</label>
+                    <div style="display: flex; gap: 10px; margin-top: 5px;">
+                        <span class="tag-badge">Không trùng lịch GV</span>
+                        <span class="tag-badge">Ưu tiên Tòa F</span>
                     </div>
                 </div>
 
-                <div style="text-align: right; margin-top: 20px;">
-                    <button type="button" class="btn btn-outline" onclick="closeModal()">Hủy</button>
+                <div style="text-align: right; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal()">Đóng</button>
                     <button type="button" class="btn btn-primary" onclick="saveChanges()">Lưu thay đổi</button>
                 </div>
             </form>
