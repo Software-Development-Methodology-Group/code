@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sinh viên - Hỗ trợ Trực tuyến</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/x-icon" href="/images/logo.png">
+    <style>
+        :root { --student-theme: #f36f21; --student-light: #fff5ec; --bg-light: #f4f6f9; }
+        body { background-color: var(--bg-light); font-family: 'Segoe UI', sans-serif; margin: 0; font-size: 14px; overflow-x: hidden;}
+        
+        /* SIDEBAR CHÍNH & PHỤ */
+        .main-sidebar { width: 80px; background: #fff; border-right: 1px solid #dee2e6; height: 100vh; position: fixed; left: 0; top: 0; padding-top: 20px; display: flex; flex-direction: column; align-items: center; z-index: 1000; box-shadow: 2px 0 5px rgba(0,0,0,0.05); }
+        .sidebar-icon { width: 45px; height: 45px; background: #f8f9fa; color: #666; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; transition: 0.3s; margin-bottom: 5px; }
+        .sidebar-icon.active { background: var(--student-theme); color: #fff; box-shadow: 0 4px 8px rgba(243, 111, 33, 0.4); }
+        .sidebar-text { font-size: 11px; margin-bottom: 20px; color: #666; font-weight: 600; text-align: center; }
+        
+        .sub-sidebar { width: 250px; background: #fff; height: 100vh; position: fixed; left: 80px; top: 0; border-right: 1px solid #dee2e6; overflow-y: auto; padding-top: 20px; }
+        .student-profile { padding: 10px 20px 20px 20px; border-bottom: 1px solid #eee; margin-bottom: 15px; text-align: center; }
+        .avatar-circle { width: 70px; height: 70px; background-color: var(--student-light); color: var(--student-theme); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: bold; margin: 0 auto 10px auto; border: 2px solid var(--student-theme); }
+        .sub-menu-item { display: flex; align-items: center; padding: 12px 20px; font-size: 14px; color: #333; text-decoration: none; font-weight: 500; border-left: 4px solid transparent; transition: 0.2s ease; cursor: pointer;}
+        .sub-menu-item i { font-size: 1.2rem; margin-right: 15px; color: #555; width: 25px; text-align: center; }
+        .sub-menu-item.active { font-weight: bold; border-left: 4px solid var(--student-theme); background: var(--student-light); color: var(--student-theme); }
+        .sub-menu-item.active i { color: var(--student-theme); }
+        
+        /* KHUNG NỘI DUNG */
+        .main-content { margin-left: 330px; padding: 20px 40px; max-width: 1200px; height: 100vh; display: flex; flex-direction: column;}
+        
+        /* Animation chuyển tab mượt */
+        .view-section { display: none; animation: fadeIn 0.4s ease; flex-grow: 1; flex-direction: column;}
+        .view-section.active-view { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* CSS CSS CHATBOT */
+        .chat-container { background: #fff; border-radius: 12px; border: 1px solid #dee2e6; box-shadow: 0 4px 15px rgba(0,0,0,0.02); display: flex; flex-direction: column; flex-grow: 1; overflow: hidden; margin-bottom: 20px; min-height: 500px;}
+        .chat-header { background: #fff; padding: 15px 20px; border-bottom: 1px solid #dee2e6; display: flex; align-items: center; justify-content: space-between;}
+        .bot-avatar { width: 40px; height: 40px; background: linear-gradient(45deg, #f36f21, #ffc107); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-right: 15px; }
+        .chat-body { flex-grow: 1; padding: 20px; overflow-y: auto; background-color: #f9fafc; }
+        .chat-message { display: flex; margin-bottom: 20px; max-width: 80%; }
+        .chat-message.bot .msg-bubble { background: #fff; border: 1px solid #e9ecef; border-radius: 0 15px 15px 15px; padding: 12px 18px; color: #333; box-shadow: 0 2px 5px rgba(0,0,0,0.02);}
+        .chat-message.user { align-self: flex-end; flex-direction: row-reverse; margin-left: auto; }
+        .chat-message.user .msg-bubble { background: var(--student-theme); color: #fff; border-radius: 15px 0 15px 15px; padding: 12px 18px; box-shadow: 0 2px 5px rgba(243, 111, 33, 0.2);}
+        .msg-time { font-size: 11px; color: #999; margin-top: 5px; display: block; }
+        .chat-message.user .msg-time { text-align: right; }
+        .quick-replies { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;}
+        .reply-btn { background: #fff; border: 1px solid var(--student-theme); color: var(--student-theme); border-radius: 20px; padding: 5px 15px; font-size: 13px; cursor: pointer; transition: 0.2s; }
+        .reply-btn:hover { background: var(--student-theme); color: #fff; }
+        .chat-footer { padding: 15px 20px; background: #fff; border-top: 1px solid #dee2e6; }
+        .chat-input-wrapper { display: flex; align-items: center; background: #f4f6f9; border-radius: 25px; padding: 5px 15px; border: 1px solid #e9ecef;}
+        .chat-input-wrapper input { border: none; background: transparent; box-shadow: none; flex-grow: 1; padding: 10px; outline: none;}
+        .btn-send { background: var(--student-theme); color: #fff; border: none; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;}
+        .typing-indicator span { display: inline-block; width: 6px; height: 6px; background-color: #aaa; border-radius: 50%; margin: 0 2px; animation: bounce 1.4s infinite ease-in-out both; }
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+        /* CSS TICKET, FAQ, DANH BẠ */
+        .accordion-button:not(.collapsed) { background-color: var(--student-light); color: var(--student-theme); font-weight: bold; box-shadow: none;}
+        .ticket-card { background: #fff; border-radius: 10px; border: 1px solid #dee2e6; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+        .contact-card { background: #fff; border-radius: 10px; border: 1px solid #dee2e6; padding: 20px; transition: 0.2s; height: 100%;}
+        .contact-card:hover { border-color: var(--student-theme); transform: translateY(-3px); box-shadow: 0 5px 15px rgba(243, 111, 33, 0.1);}
+        .contact-icon { width: 50px; height: 50px; background: var(--student-light); color: var(--student-theme); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 15px;}
+    </style>
+</head>
+<body>
+    
+    <<div class="main-sidebar">
+    <a href="sinhvien-dashboard.html" class="main-menu-item text-decoration-none text-dark d-flex flex-column align-items-center">
+        <div class="sidebar-icon" id="icon-hoctap"><i class="bi bi-mortarboard-fill"></i></div>
+        <div class="sidebar-text" id="text-hoctap">Học tập</div>
+    </a>
+    
+    <a href="sinhvien-taichinh.html" class="main-menu-item text-decoration-none text-dark d-flex flex-column align-items-center">
+        <div class="sidebar-icon"><i class="bi bi-wallet2"></i></div>
+        <div class="sidebar-text">Tài chính</div>
+    </a>
+    
+    <a href="sinhvien-hotro.html" class="main-menu-item text-decoration-none text-dark d-flex flex-column align-items-center">
+        <div class="sidebar-icon" id="icon-hotro"><i class="bi bi-chat-dots"></i></div>
+        <div class="sidebar-text" id="text-hotro">Hỗ trợ</div>
+    </a>
+    
+    <div class="d-flex flex-column align-items-center mt-auto mb-3">
+         <a href="../dangnhap/dangnhap.html" class="text-decoration-none text-dark d-flex flex-column align-items-center">
+            <div class="sidebar-icon"><i class="bi bi-box-arrow-right"></i></div>
+            <div class="sidebar-text" onclick="xulyDangxuat()">Đăng xuất</div>
+        </a>
+    </div>
+</div>
+
+    <div class="sub-sidebar">
+        <div class="student-profile">
+            <div class="avatar-circle">A</div>
+            <h6 class="fw-bold mb-1 text-dark">Nguyễn Văn An</h6>
+            <span class="badge bg-light text-dark border font-monospace">HE150123</span>
+        </div>
+        <div class="sub-menu-item active" onclick="switchTab('view-chatbot', this)"><i class="bi bi-robot"></i> Trợ lý ảo (Chatbot)</div>
+        <div class="sub-menu-item" onclick="switchTab('view-faq', this)"><i class="bi bi-question-circle"></i> Câu hỏi thường gặp</div>
+        <div class="sub-menu-item" onclick="switchTab('view-ticket', this)"><i class="bi bi-ticket-detailed"></i> Gửi yêu cầu (Ticket)</div>
+        <div class="sub-menu-item" onclick="switchTab('view-danhba', this)"><i class="bi bi-telephone"></i> Danh bạ phòng ban</div>
+    </div>
+
+    <div class="main-content">
+        
+        <div id="view-chatbot" class="view-section active-view">
+            <h3 class="fw-bold mb-3"><i class="bi bi-stars text-warning me-2"></i> Trợ lý ảo FPoly</h3>
+            <div class="chat-container">
+                <div class="chat-header">
+                    <div class="d-flex align-items-center">
+                        <div class="bot-avatar"><i class="bi bi-robot"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-0">FPoly Support Bot</h6>
+                            <small class="text-success fw-bold"><i class="bi bi-circle-fill text-success" style="font-size: 8px;"></i> Đang trực tuyến</small>
+                        </div>
+                    </div>
+                    <button class="btn btn-light btn-sm border"><i class="bi bi-clock-history me-1"></i> Lịch sử</button>
+                </div>
+                <div class="chat-body" id="chatBody">
+                    <div class="chat-message bot">
+                        <div class="bot-avatar" style="width: 30px; height: 30px; font-size: 14px;"><i class="bi bi-robot"></i></div>
+                        <div>
+                            <div class="msg-bubble">
+                                Chào Văn An! Mình là trợ lý ảo của FPT Polytechnic. <br><br>
+                                Mình có thể giúp bạn giải đáp tự động các thắc mắc. Bạn cần hỗ trợ gì hôm nay?
+                            </div>
+                            <div class="quick-replies">
+                                <button class="reply-btn" onclick="sendQuickReply('Bao giờ có lịch thi kỳ này?')">Lịch thi kỳ này?</button>
+                                <button class="reply-btn" onclick="sendQuickReply('Làm sao để đăng ký học lại?')">Đăng ký học lại?</button>
+                                <button class="reply-btn" onclick="sendQuickReply('Tôi muốn xin giấy xác nhận sinh viên')">Xin xác nhận SV</button>
+                            </div>
+                            <span class="msg-time">Vừa xong</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-footer">
+                    <form id="chatForm" onsubmit="handleSend(event)">
+                        <div class="chat-input-wrapper">
+                            <i class="bi bi-paperclip fs-5 text-muted ms-2" style="cursor: pointer;"></i>
+                            <input type="text" id="chatInput" placeholder="Nhập câu hỏi..." autocomplete="off">
+                            <button type="submit" class="btn-send"><i class="bi bi-send-fill"></i></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-faq" class="view-section" style="padding-top: 10px;">
+            <h3 class="fw-bold mb-4">Câu hỏi thường gặp (FAQ)</h3>
+            <div class="accordion" id="faqAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">1. Sinh viên nghỉ bao nhiêu buổi thì bị cấm thi?</button></h2>
+                    <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">Theo quy chế, sinh viên vắng mặt quá <strong>20%</strong> tổng số giờ học sẽ không được dự thi Final.</div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">2. Làm thế nào để xin cấp lại Thẻ sinh viên?</button></h2>
+                    <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">Nộp phí (50.000đ) tại Phòng Kế toán. Mang biên lai đến Phòng CTSV để làm thẻ mới.</div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">3. Khi nào được bảo lưu kết quả học tập?</button></h2>
+                    <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">Sinh viên được quyền xin bảo lưu tối đa 2 học kỳ liên tiếp. Hãy tạo Ticket để xin biểu mẫu.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-ticket" class="view-section" style="padding-top: 10px;">
+            <h3 class="fw-bold mb-4">Gửi yêu cầu (Ticket)</h3>
+            <div class="row g-4">
+                <div class="col-md-5">
+                    <div class="ticket-card">
+                        <h5 class="fw-bold border-bottom pb-2 mb-3"><i class="bi bi-plus-circle-fill text-primary me-2"></i> Tạo yêu cầu mới</h5>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Loại dịch vụ</label>
+                            <select class="form-select">
+                                <option>Xin cấp Giấy xác nhận Sinh viên</option>
+                                <option>Phúc khảo điểm thi</option>
+                                <option>Khác...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Nội dung chi tiết</label>
+                            <textarea class="form-control" rows="4" placeholder="Mô tả rõ yêu cầu của bạn..."></textarea>
+                        </div>
+                        <button class="btn w-100 text-white fw-bold" style="background-color: var(--student-theme);" onclick="alert('Đã gửi yêu cầu thành công!')"><i class="bi bi-send me-2"></i> Gửi đi</button>
+                    </div>
+                </div>
+                <div class="col-md-7">
+                    <div class="ticket-card">
+                        <h5 class="fw-bold border-bottom pb-2 mb-3"><i class="bi bi-clock-history text-success me-2"></i> Lịch sử yêu cầu</h5>
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr><th>Mã GD</th><th>Loại dịch vụ</th><th>Ngày tạo</th><th>Trạng thái</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="font-monospace text-primary">#TK8821</td>
+                                    <td>Xin xác nhận Sinh viên</td>
+                                    <td>15/03/2026</td>
+                                    <td><span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split"></i> Đang xử lý</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="font-monospace text-primary">#TK7102</td>
+                                    <td>Phúc khảo điểm</td>
+                                    <td>01/02/2026</td>
+                                    <td><span class="badge bg-success"><i class="bi bi-check-circle"></i> Đã hoàn thành</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-danhba" class="view-section" style="padding-top: 10px;">
+            <h3 class="fw-bold mb-4">Danh bạ Phòng ban FPoly</h3>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="contact-card">
+                        <div class="contact-icon"><i class="bi bi-people-fill"></i></div>
+                        <h5 class="fw-bold">Công tác Sinh viên</h5>
+                        <p class="text-muted small mb-3">Thẻ SV, giấy xác nhận, bảo lưu, phong trào.</p>
+                        <div><i class="bi bi-telephone-fill text-secondary me-2"></i> <strong>024 7300 1955 (Phím 1)</strong></div>
+                        <div class="mt-2"><i class="bi bi-geo-alt-fill text-danger me-2"></i> Phòng 101, Tòa T</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="contact-card">
+                        <div class="contact-icon text-primary bg-primary bg-opacity-10"><i class="bi bi-book-half"></i></div>
+                        <h5 class="fw-bold">Đào tạo & Khảo thí</h5>
+                        <p class="text-muted small mb-3">Lịch học, đăng ký tín chỉ, lịch thi, điểm số.</p>
+                        <div><i class="bi bi-telephone-fill text-secondary me-2"></i> <strong>024 7300 1955 (Phím 2)</strong></div>
+                        <div class="mt-2"><i class="bi bi-geo-alt-fill text-danger me-2"></i> Phòng 205, Tòa T</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="contact-card">
+                        <div class="contact-icon text-success bg-success bg-opacity-10"><i class="bi bi-cash-stack"></i></div>
+                        <h5 class="fw-bold">Phòng Kế toán</h5>
+                        <p class="text-muted small mb-3">Học phí, lệ phí, biên lai thu tiền.</p>
+                        <div><i class="bi bi-telephone-fill text-secondary me-2"></i> <strong>024 7300 1955 (Phím 3)</strong></div>
+                        <div class="mt-2"><i class="bi bi-geo-alt-fill text-danger me-2"></i> Phòng 102, Tòa T</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // 1. HÀM CHUYỂN TAB MƯỢT MÀ (KHÔNG TẢI LẠI TRANG)
+        function switchTab(viewId, menuElement) {
+            // Xóa class active ở tất cả các nút menu
+            document.querySelectorAll('.sub-menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            // Thêm class active cho nút vừa bấm
+            menuElement.classList.add('active');
+
+            // Ẩn tất cả các khu vực nội dung
+            document.querySelectorAll('.view-section').forEach(section => {
+                section.classList.remove('active-view');
+            });
+            // Hiển thị khu vực nội dung tương ứng
+            document.getElementById(viewId).classList.add('active-view');
+        }
+
+        // 2. LOGIC CỦA CHATBOT 
+        const chatBody = document.getElementById('chatBody');
+        const chatInput = document.getElementById('chatInput');
+
+        function scrollToBottom() { chatBody.scrollTop = chatBody.scrollHeight; }
+
+        function sendQuickReply(text) {
+            chatInput.value = text;
+            handleSend(new Event('submit'));
+        }
+
+        function handleSend(e) {
+            e.preventDefault();
+            const message = chatInput.value.trim();
+            if (message === '') return;
+
+            appendMessage('user', message);
+            chatInput.value = '';
+            const typingId = showTypingIndicator();
+
+            setTimeout(() => {
+                document.getElementById(typingId).remove(); 
+                let botReply = "";
+                if(message.toLowerCase().includes('lịch thi')) {
+                    botReply = "Lịch thi dự kiến sẽ được công bố vào tuần học thứ 8. Bạn có thể theo dõi tại tab <b>Học tập > Lịch học & Lịch thi</b>.";
+                } else if(message.toLowerCase().includes('học lại')) {
+                    botReply = "Để đăng ký học lại, bạn vui lòng chờ thông báo mở Cổng đăng ký. Phí học lại hiện tại là 900.000đ/môn.";
+                } else if(message.toLowerCase().includes('xác nhận')) {
+                    botReply = "Để xin giấy xác nhận, bạn hãy chuyển sang tab <b>Gửi yêu cầu (Ticket)</b> ngay bên trái màn hình để điền form nhé.";
+                } else {
+                    botReply = "Xin lỗi, mình chưa hiểu rõ ý của bạn. Bạn hãy tạo Ticket để các anh chị giáo vụ trực tiếp hỗ trợ nhé!";
+                }
+                appendMessage('bot', botReply);
+            }, 1000);
+        }
+
+        function appendMessage(sender, text) {
+            const timeString = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            let msgHTML = sender === 'user' ? 
+                `<div class="chat-message user"><div><div class="msg-bubble">${text}</div><span class="msg-time">${timeString}</span></div></div>` : 
+                `<div class="chat-message bot"><div class="bot-avatar" style="width: 30px; height: 30px; font-size: 14px;"><i class="bi bi-robot"></i></div><div><div class="msg-bubble">${text}</div><span class="msg-time">${timeString}</span></div></div>`;
+            chatBody.insertAdjacentHTML('beforeend', msgHTML);
+            scrollToBottom();
+        }
+
+        function showTypingIndicator() {
+            const id = 'typing-' + Date.now();
+            const typingHTML = `<div class="chat-message bot" id="${id}"><div class="bot-avatar" style="width: 30px; height: 30px; font-size: 14px;"><i class="bi bi-robot"></i></div><div><div class="msg-bubble typing-indicator"><span></span><span></span><span></span></div></div></div>`;
+            chatBody.insertAdjacentHTML('beforeend', typingHTML);
+            scrollToBottom();
+            return id;
+        }
+    </script>
+</body>
+</html>

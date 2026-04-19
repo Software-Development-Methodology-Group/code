@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sinh viên - Tài chính & Học phí</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="/images/logo.png">
+    <style>
+        :root { --student-theme: #f36f21; --student-light: #fff5ec; --bg-light: #f4f6f9; }
+        body { background-color: var(--bg-light); font-family: 'Segoe UI', sans-serif; margin: 0; font-size: 14px; overflow-x: hidden;}
+        
+        /* SIDEBAR CHÍNH & PHỤ */
+        .main-sidebar { width: 80px; background: #fff; border-right: 1px solid #dee2e6; height: 100vh; position: fixed; left: 0; top: 0; padding-top: 20px; display: flex; flex-direction: column; align-items: center; z-index: 1000; box-shadow: 2px 0 5px rgba(0,0,0,0.05); }
+        .sidebar-icon { width: 45px; height: 45px; background: #f8f9fa; color: #666; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; transition: 0.3s; margin-bottom: 5px; }
+        .sidebar-icon.active { background: var(--student-theme); color: #fff; box-shadow: 0 4px 8px rgba(243, 111, 33, 0.4); }
+        .sidebar-text { font-size: 11px; margin-bottom: 20px; color: #666; font-weight: 600; text-align: center; }
+        
+        .sub-sidebar { width: 250px; background: #fff; height: 100vh; position: fixed; left: 80px; top: 0; border-right: 1px solid #dee2e6; overflow-y: auto; padding-top: 20px; }
+        .student-profile { padding: 10px 20px 20px 20px; border-bottom: 1px solid #eee; margin-bottom: 15px; text-align: center; }
+        .avatar-circle { width: 70px; height: 70px; background-color: var(--student-light); color: var(--student-theme); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: bold; margin: 0 auto 10px auto; border: 2px solid var(--student-theme); }
+        .sub-menu-item { display: flex; align-items: center; padding: 12px 20px; font-size: 14px; color: #333; text-decoration: none; font-weight: 500; border-left: 4px solid transparent; transition: 0.2s ease; cursor: pointer;}
+        .sub-menu-item i { font-size: 1.2rem; margin-right: 15px; color: #555; width: 25px; text-align: center; }
+        .sub-menu-item.active { font-weight: bold; border-left: 4px solid var(--student-theme); background: var(--student-light); color: var(--student-theme); }
+        .sub-menu-item.active i { color: var(--student-theme); }
+        
+        /* KHUNG NỘI DUNG */
+        .main-content { margin-left: 330px; padding: 30px 40px; max-width: 1200px; height: 100vh; display: flex; flex-direction: column;}
+        
+        .view-section { display: none; animation: fadeIn 0.4s ease; flex-grow: 1; flex-direction: column;}
+        .view-section.active-view { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* CSS TÀI CHÍNH */
+        .finance-card { background: #fff; border-radius: 12px; border: 1px solid #dee2e6; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); margin-bottom: 20px;}
+        .amount-highlight { font-size: 32px; font-weight: 800; color: #dc3545; line-height: 1; }
+        
+        /* Khung QR Code */
+        .qr-box { border: 2px dashed #0d6efd; background-color: #f8faff; border-radius: 12px; padding: 20px; text-align: center; }
+        .qr-image-placeholder { width: 180px; height: 180px; background: #fff; border: 1px solid #dee2e6; border-radius: 10px; margin: 0 auto 15px auto; display: flex; align-items: center; justify-content: center; font-size: 60px; color: #333; box-shadow: 0 4px 10px rgba(0,0,0,0.05);}
+        .bank-info { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; text-align: left; font-size: 14px;}
+        .copy-btn { cursor: pointer; color: var(--student-theme); font-weight: bold; font-size: 13px; }
+        .copy-btn:hover { text-decoration: underline; }
+
+        .table-custom th { background-color: #f8f9fa; font-weight: 600; color: #555;}
+        .status-badge { padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: bold;}
+    </style>
+</head>
+<body>
+    
+    <div class="main-sidebar">
+        <a href="sinhvien-dashboard.html" class="main-menu-item text-decoration-none text-dark d-flex flex-column align-items-center">
+            <div class="sidebar-icon"><i class="bi bi-mortarboard-fill"></i></div><div class="sidebar-text">Học tập</div>
+        </a>
+        <a href="sinhvien-taichinh.html" class="main-menu-item text-decoration-none text-dark d-flex flex-column align-items-center">
+            <div class="sidebar-icon active"><i class="bi bi-wallet2"></i></div><div class="sidebar-text" style="color: var(--student-theme);">Tài chính</div>
+        </a>
+        <a href="sinhvien-hotro.html" class="main-menu-item text-decoration-none text-dark d-flex flex-column align-items-center">
+            <div class="sidebar-icon"><i class="bi bi-chat-dots"></i></div><div class="sidebar-text">Hỗ trợ</div>
+        </a>
+        <div class="d-flex flex-column align-items-center mt-auto mb-3">
+            <a href="../dangnhap/dangnhap.html" class="text-decoration-none text-dark d-flex flex-column align-items-center">
+            <div class="sidebar-icon"><i class="bi bi-box-arrow-right"></i></div>
+            <div class="sidebar-text" onclick="xulyDangxuat()">Đăng xuất</div>
+        </a>
+        </div>
+    </div>
+
+    <div class="sub-sidebar">
+        <div class="student-profile">
+            <div class="avatar-circle">A</div>
+            <h6 class="fw-bold mb-1 text-dark">Nguyễn Văn An</h6>
+            <span class="badge bg-light text-dark border font-monospace">HE150123</span>
+        </div>
+        <div class="sub-menu-item active" onclick="switchTab('view-thanhtoan', this)"><i class="bi bi-credit-card"></i> Thanh toán Học phí</div>
+        <div class="sub-menu-item" onclick="switchTab('view-lichsu', this)"><i class="bi bi-clock-history"></i> Lịch sử Giao dịch</div>
+        <div class="sub-menu-item" onclick="switchTab('view-hoadon', this)"><i class="bi bi-receipt"></i> Hóa đơn Điện tử</div>
+    </div>
+
+    <div class="main-content">
+        
+        <div id="view-thanhtoan" class="view-section active-view">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h3 class="fw-bold mb-1">Công nợ & Thanh toán</h3>
+                    <p class="text-muted mb-0">Học kỳ Spring 2026 (Hạn chót: 10/04/2026)</p>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-7">
+                    <div class="finance-card">
+                        <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+                            <h5 class="fw-bold mb-0 text-dark">Tổng dư nợ hiện tại</h5>
+                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger px-3 py-2 fs-6">Chưa thanh toán</span>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="amount-highlight">10,250,000 <span class="fs-5 text-muted fw-normal">VND</span></div>
+                        </div>
+
+                        <h6 class="fw-bold mb-3"><i class="bi bi-list-check me-2"></i> Chi tiết các khoản thu</h6>
+                        <table class="table table-bordered table-custom mb-0">
+                            <tbody>
+                                <tr>
+                                    <td>Học phí chuyên ngành (12 Tín chỉ)</td>
+                                    <td class="text-end fw-bold">8,400,000 đ</td>
+                                </tr>
+                                <tr>
+                                    <td>Học phí Tiếng Anh (Mức 3)</td>
+                                    <td class="text-end fw-bold">2,100,000 đ</td>
+                                </tr>
+                                <tr>
+                                    <td>Bảo hiểm Y tế (Bắt buộc)</td>
+                                    <td class="text-end fw-bold">850,000 đ</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-success"><i class="bi bi-gift-fill me-1"></i> Trừ Học bổng/Miễn giảm (Khuyến học)</td>
+                                    <td class="text-end fw-bold text-success">- 1,100,000 đ</td>
+                                </tr>
+                                <tr class="table-light">
+                                    <td class="fw-bold text-uppercase">Tổng cộng phải nộp</td>
+                                    <td class="text-end fw-bold text-danger fs-5">10,250,000 đ</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="col-md-5">
+                    <div class="qr-box">
+                        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-qr-code-scan me-2"></i> Quét mã VietQR</h5>
+                        <p class="text-muted small mb-3">Sử dụng App ngân hàng hoặc Momo/VNPay để quét mã. Giao dịch sẽ được gạch nợ tự động sau 3-5 phút.</p>
+                        
+                        <div class="qr-image-placeholder">
+                            <i class="bi bi-qr-code"></i>
+                        </div>
+
+                        <div class="bank-info mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Ngân hàng:</span>
+                                <strong class="text-dark">TPBank (Hội sở chính)</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Chủ tài khoản:</span>
+                                <strong class="text-dark">TRUONG CAO DANG FPT POLYTECHNIC</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2 align-items-center">
+                                <span class="text-muted">Số tài khoản:</span>
+                                <div>
+                                    <strong class="text-primary fs-5" id="accNumber">6868 6868 999</strong> 
+                                    <span class="copy-btn ms-2" onclick="copyText('accNumber')"><i class="bi bi-copy"></i></span>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted">Nội dung CK:</span>
+                                <div>
+                                    <strong class="text-dark font-monospace" id="transferMsg">HE150123 NOP HOC PHI SP26</strong>
+                                    <span class="copy-btn ms-2" onclick="copyText('transferMsg')"><i class="bi bi-copy"></i></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary w-100 fw-bold py-2 shadow-sm" onclick="confirmPayment()"><i class="bi bi-check-circle me-2"></i> Tôi đã chuyển khoản thành công</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-lichsu" class="view-section">
+            <h3 class="fw-bold mb-4">Lịch sử Giao dịch</h3>
+            <div class="finance-card">
+                <div class="d-flex gap-3 mb-4">
+                    <select class="form-select w-auto"><option>Năm học 2025 - 2026</option><option>Năm học 2024 - 2025</option></select>
+                    <select class="form-select w-auto"><option>Tất cả trạng thái</option><option>Thành công</option><option>Thất bại</option></select>
+                </div>
+                
+                <table class="table table-hover align-middle table-custom">
+                    <thead>
+                        <tr>
+                            <th>Mã GD</th>
+                            <th>Ngày thanh toán</th>
+                            <th>Khoản thu</th>
+                            <th>Số tiền (VND)</th>
+                            <th>Phương thức</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="font-monospace text-primary">FT25102001</td>
+                            <td>15/10/2025 14:30</td>
+                            <td>Học phí Học kỳ Fall 2025</td>
+                            <td class="fw-bold">9,800,000</td>
+                            <td><i class="bi bi-qr-code text-secondary me-1"></i> VietQR</td>
+                            <td><span class="status-badge bg-success bg-opacity-10 text-success border border-success"><i class="bi bi-check2"></i> Thành công</span></td>
+                        </tr>
+                        <tr>
+                            <td class="font-monospace text-primary">FT25081055</td>
+                            <td>05/08/2025 09:15</td>
+                            <td>Phí học lại môn C (IT101)</td>
+                            <td class="fw-bold">900,000</td>
+                            <td><i class="bi bi-credit-card-fill text-secondary me-1"></i> Thẻ ATM</td>
+                            <td><span class="status-badge bg-success bg-opacity-10 text-success border border-success"><i class="bi bi-check2"></i> Thành công</span></td>
+                        </tr>
+                        <tr>
+                            <td class="font-monospace text-primary">FT25081053</td>
+                            <td>05/08/2025 09:10</td>
+                            <td>Phí học lại môn C (IT101)</td>
+                            <td class="fw-bold">900,000</td>
+                            <td><i class="bi bi-credit-card-fill text-secondary me-1"></i> Thẻ ATM</td>
+                            <td><span class="status-badge bg-danger bg-opacity-10 text-danger border border-danger"><i class="bi bi-x-circle"></i> Lỗi GD</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="view-hoadon" class="view-section">
+            <h3 class="fw-bold mb-4">Hóa đơn Điện tử</h3>
+            <div class="alert alert-info border-info bg-opacity-10 mb-4">
+                <i class="bi bi-info-circle-fill me-2"></i> Hóa đơn điện tử (VAT) sẽ được hệ thống tự động phát hành và gửi về Email FPT của sinh viên sau <strong>03 ngày làm việc</strong> kể từ khi thanh toán thành công.
+            </div>
+
+            <div class="finance-card">
+                <table class="table table-hover align-middle table-custom">
+                    <thead>
+                        <tr>
+                            <th>Số Hóa Đơn</th>
+                            <th>Ký hiệu</th>
+                            <th>Ngày lập</th>
+                            <th>Nội dung</th>
+                            <th>Tổng tiền</th>
+                            <th class="text-center">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="fw-bold">0001524</td>
+                            <td>1C25TAA</td>
+                            <td>16/10/2025</td>
+                            <td>Học phí Học kỳ Fall 2025</td>
+                            <td class="fw-bold">9,800,000</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-danger fw-bold"><i class="bi bi-file-earmark-pdf-fill me-1"></i> Tải PDF</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">0000892</td>
+                            <td>1C25TAA</td>
+                            <td>06/08/2025</td>
+                            <td>Phí học lại môn C (IT101)</td>
+                            <td class="fw-bold">900,000</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-danger fw-bold"><i class="bi bi-file-earmark-pdf-fill me-1"></i> Tải PDF</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="liveToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body fw-bold" id="toastMessage">
+                    </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 1. HÀM CHUYỂN TAB MƯỢT MÀ
+        function switchTab(viewId, menuElement) {
+            document.querySelectorAll('.sub-menu-item').forEach(item => { item.classList.remove('active'); });
+            menuElement.classList.add('active');
+
+            document.querySelectorAll('.view-section').forEach(section => { section.classList.remove('active-view'); });
+            document.getElementById(viewId).classList.add('active-view');
+        }
+
+        // 2. HÀM COPY VĂN BẢN (STK, Nội dung chuyển khoản)
+        function copyText(elementId) {
+            var text = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(text).then(function() {
+                showToast('<i class="bi bi-clipboard-check-fill me-2"></i> Đã sao chép: ' + text);
+            }, function(err) {
+                console.error('Không thể sao chép', err);
+            });
+        }
+
+        // 3. HÀM XÁC NHẬN THANH TOÁN
+        function confirmPayment() {
+            showToast('<i class="bi bi-arrow-repeat me-2"></i> Đã gửi yêu cầu đối soát! Hệ thống đang kiểm tra giao dịch của bạn tại TPBank.');
+            
+            // Đổi nút thành trạng thái đang xử lý
+            let btn = document.querySelector('.btn-primary.w-100');
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Đang chờ xác nhận...';
+            btn.classList.replace('btn-primary', 'btn-secondary');
+            btn.disabled = true;
+        }
+
+        // 4. HÀM HIỂN THỊ THÔNG BÁO (TOAST)
+        function showToast(message) {
+            document.getElementById('toastMessage').innerHTML = message;
+            const toastBootstrap = bootstrap.Toast.getOrCreateInstance(document.getElementById('liveToast'));
+            toastBootstrap.show();
+        }
+
+        // 5. HIỆU ỨNG CHUYỂN TRANG MƯỢT MÀ CHO SIDEBAR CHÍNH
+        document.addEventListener("DOMContentLoaded", function() {
+            let fileName = window.location.pathname.split('/').pop();
+            document.querySelectorAll('.main-menu-item').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    let target = this.getAttribute('href');
+                    if(target !== '#' && !target.includes(fileName)) {
+                        e.preventDefault();
+                        document.body.style.transition = 'opacity 0.3s ease';
+                        document.body.style.opacity = '0';
+                        setTimeout(() => { window.location.href = target; }, 300);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

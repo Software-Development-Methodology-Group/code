@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống - Quản trị Đào tạo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="/images/logo.png">
+    <style>
+        :root { 
+            --bg-light: #f4f6f9; 
+            --text-main: #333;
+            --admin-theme: #10b981; /* Xanh ngọc / Xanh cổ vịt cho Hệ thống */
+            --admin-light: #ecfdf5;
+            --ai-gradient: linear-gradient(45deg, #6f42c1, #0dcaf0);
+        }
+        body { background-color: var(--bg-light); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; overflow-x: hidden; font-size: 14px;}
+
+        /* --- SIDEBAR CHÍNH --- */
+        .main-sidebar { width: 80px; background: #fff; border-right: 1px solid #dee2e6; height: 100vh; position: fixed; left: 0; top: 0; z-index: 1000; padding-top: 20px; display: flex; flex-direction: column; align-items: center; box-shadow: 2px 0 5px rgba(0,0,0,0.05); }
+        .sidebar-icon { width: 45px; height: 45px; background: #f8f9fa; color: #666; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; transition: 0.3s; margin-bottom: 5px; }
+        
+        /* Hiệu ứng active/hover cho Hệ thống */
+        .sidebar-icon:hover { background: var(--admin-theme); color: #fff; box-shadow: 0 4px 8px rgba(16, 185, 129, 0.4); }
+        .sidebar-icon.active { background: var(--admin-theme); color: #fff; }
+        .sidebar-text { font-size: 11px; margin-bottom: 20px; color: #666; font-weight: 600; text-align: center; }
+
+        /* --- MENU PHỤ --- */
+        .sub-sidebar { width: 280px; background: #fff; height: 100vh; position: fixed; left: 80px; top: 0; border-right: 1px solid #dee2e6; overflow-y: auto; padding-top: 20px;}
+        .admin-header { padding: 10px 20px 20px 20px; border-bottom: 1px solid #eee; margin-bottom: 15px; }
+        .sub-menu-item { display: flex; align-items: center; padding: 15px 20px; font-size: 14.5px; color: var(--text-main); text-decoration: none; font-weight: 500; border-left: 4px solid transparent; transition: 0.2s ease; }
+        .sub-menu-item i { font-size: 1.2rem; margin-right: 15px; color: #555; width: 25px; text-align: center; }
+        .sub-menu-item:hover, .sub-menu-item.active { background: var(--admin-light); color: var(--admin-theme); }
+        .sub-menu-item:hover i, .sub-menu-item.active i { color: var(--admin-theme); }
+        .sub-menu-item.active { font-weight: bold; border-left: 4px solid var(--admin-theme); }
+
+        /* --- NỘI DUNG CHÍNH --- */
+        .main-content { margin-left: 360px; padding: 30px 40px; max-width: 1400px; animation: fadeIn 0.4s ease;}
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- STAT CARD --- */
+        .stat-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); border: 1px solid #dee2e6; display: flex; align-items: center; margin-bottom: 30px; transition: 0.2s;}
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.06); border-color: var(--admin-theme);}
+        .stat-icon { width: 60px; height: 60px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 28px; margin-right: 20px; }
+        .bg-icon-admin { background-color: var(--admin-light); color: var(--admin-theme); }
+        .bg-icon-blue { background-color: #e7f1ff; color: #0d6efd; }
+        .bg-icon-purple { background-color: #f4f0fa; color: #6f42c1; }
+
+        /* --- FEATURE CARD --- */
+        .feature-card {
+            background: #fff; border-radius: 12px; border: 1px solid #dee2e6; padding: 25px;
+            height: 100%; transition: all 0.3s ease; cursor: pointer; text-decoration: none; color: inherit; display: block;
+            position: relative; overflow: hidden;
+        }
+        .feature-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.08); border-color: var(--admin-theme); }
+        .feature-card i.main-icon { font-size: 36px; color: var(--admin-theme); margin-bottom: 15px; display: inline-block; }
+        .feature-card h5 { font-weight: 700; margin-bottom: 10px; font-size: 16px; color: #222;}
+        .feature-card p { font-size: 14px; color: #6c757d; margin-bottom: 0; line-height: 1.6; }
+        
+        .ai-badge { background: var(--ai-gradient); color: white; font-size: 11px; padding: 3px 8px; border-radius: 12px; margin-left: 8px; vertical-align: text-top; }
+        .step-badge { position: absolute; top: 15px; right: 15px; background: #e9ecef; color: #6c757d; font-size: 12px; font-weight: bold; padding: 4px 10px; border-radius: 20px; }
+
+    </style>
+</head>
+<body>
+    
+    <div class="main-sidebar">
+        <div class="d-flex flex-column align-items-center"><a href="lichgiangday.html" class="text-decoration-none text-dark d-flex flex-column align-items-center"><div class="sidebar-icon"><i class="bi bi-person-video3"></i></div><div class="sidebar-text">Giảng viên</div></a></div>
+        <div class="d-flex flex-column align-items-center"><a href="khaothi-dashboard.html" class="text-decoration-none text-dark d-flex flex-column align-items-center"><div class="sidebar-icon"><i class="bi bi-clipboard-check"></i></div><div class="sidebar-text">Khảo thí</div></a></div>
+        <div class="d-flex flex-column align-items-center"><a href="hoidong-pheduyet.html" class="text-decoration-none text-dark d-flex flex-column align-items-center"><div class="sidebar-icon"><i class="bi bi-people-fill"></i></div><div class="sidebar-text">Hội đồng</div></a></div>
+        
+        <div class="d-flex flex-column align-items-center"><a href="hethong-dashboard.html" class="text-decoration-none d-flex flex-column align-items-center"><div class="sidebar-icon active"><i class="bi bi-gear-fill"></i></div><div class="sidebar-text" style="color: var(--admin-theme);">Hệ thống</div></a></div>
+    </div>
+
+    <div class="sub-sidebar">
+        <div class="admin-header">
+            <h5 class="fw-bold text-dark mb-1">Cổng Quản Trị Hệ Thống</h5>
+            <span class="badge" style="background-color: var(--admin-theme); font-size: 11px;">Phòng Đào Tạo</span>
+        </div>
+        <a href="hethong-dashboard.html" class="sub-menu-item active"><i class="bi bi-grid-1x2"></i> Tổng quan (Dashboard)</a>
+        <a href="hethong-chuongtrinh.html" class="sub-menu-item"><i class="bi bi-journal-album"></i> 1. Quản lý CT Đào tạo</a>
+        <a href="hethong-tiendo.html" class="sub-menu-item"><i class="bi bi-calendar3-range"></i> 2. Tiến độ Năm học</a>
+        <a href="hethong-dubao-ai.html" class="sub-menu-item"><i class="bi bi-magic"></i> 3. Dự báo & Mở lớp AI</a>
+        <a href="step2-scheduling.html" class="sub-menu-item"><i class="bi bi-calendar-week"></i> 4. Xếp Lịch Tự động AI</a>
+        <a href="hethong-qlddk.html" class="sub-menu-item"><i class="bi bi-people"></i> 5. Quản lý đợt Đăng ký tín chỉ</a>
+    </div>
+
+    <div class="main-content">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold mb-1" style="color: #222;">Phòng Quản lý Đào tạo</h3>
+                <p class="text-muted mb-0">Thiết lập tham số Master Data, Tiến độ và Xếp lịch tự động.</p>
+            </div>
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle bg-white" type="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-clock-history me-1"></i> Chuẩn bị cho:  Học Kỳ 1 (2025-2026) 
+                </button>
+            </div>
+        </div>
+
+        <div class="row mb-2">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-icon-admin"><i class="bi bi-building"></i></div>
+                    <div><h3 class="fw-bold mb-0">145</h3><span class="text-muted">Phòng học khả dụng</span></div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-icon-blue"><i class="bi bi-person-video3"></i></div>
+                    <div><h3 class="fw-bold mb-0">850</h3><span class="text-muted">Giảng viên / Trợ giảng</span></div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-icon-purple"><i class="bi bi-journal-bookmark"></i></div>
+                    <div><h3 class="fw-bold mb-0">2,410</h3><span class="text-muted">Học phần trong Master Data</span></div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #fff3cd; color: #ffc107;"><i class="bi bi-exclamation-octagon"></i></div>
+                    <div><h3 class="fw-bold mb-0">12</h3><span class="text-muted">Lớp đang bị xung đột lịch</span></div>
+                </div>
+            </div>
+        </div>
+
+        <h5 class="fw-bold text-dark mb-3 mt-2"><i class="bi bi-diagram-3-fill me-2" style="color: var(--admin-theme);"></i> Luồng Nghiệp Vụ Chuẩn Bị Học Kỳ Mới</h5>
+        
+        <div class="row g-4">
+            
+            <div class="col-md-6 col-lg-3">
+                <a href="hethong-chuongtrinh.html" class="feature-card">
+                    <span class="step-badge">Bước 1</span>
+                    <i class="bi bi-journal-richtext main-icon"></i>
+                    <h5>Quản lý Khung CTĐT</h5>
+                    <p>Soạn thảo danh sách môn học, số tín chỉ, thiết lập điều kiện tiên quyết. Trình lên Hội đồng duyệt để làm Master Data.</p>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <a href="hethong-tiendo.html" class="feature-card border-success" style="background-color: #f0fdf4;">
+                    <span class="step-badge text-white bg-success">Bước 2 (Đang mở)</span>
+                    <i class="bi bi-calendar3 main-icon text-success"></i>
+                    <h5 class="text-success">Lập Tiến độ Năm học</h5>
+                    <p>Khởi tạo dải 52 tuần. Cấu hình màu sắc gán nhãn: Tuần học Lý thuyết, Tuần Thi, Thực tập, Nghỉ Lễ/Tết.</p>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <a href="hethong-dubao-ai.html" class="feature-card" style="border: 2px solid #0dcaf0;">
+                    <span class="step-badge">Bước 3</span>
+                    <i class="bi bi-magic main-icon" style="color: #0dcaf0;"></i>
+                    <h5>Dự báo Mở lớp <span class="ai-badge"><i class="bi bi-stars"></i> AI</span></h5>
+                    <p>AI trích xuất CSDL nợ môn & quy mô khóa, tính toán và tự động đề xuất số lượng lớp học phần cần mở tối ưu nhất.</p>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <a href="step2-scheduling.html" class="feature-card" style="border: 2px solid #6f42c1;">
+                    <span class="step-badge">Bước 4</span>
+                    <i class="bi bi-calendar-grid-3x3 main-icon" style="color: #6f42c1;"></i>
+                    <h5>Xếp TKB Tự Động <span class="ai-badge"><i class="bi bi-stars"></i> AI</span></h5>
+                    <p>Khai báo ràng buộc sư phạm. AI quét quỹ phòng, quỹ thời gian rảnh của GV để tự động xếp TKB không xung đột.</p>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <a href="hethong-qlddk" class="feature-card">
+                    <span class="step-badge">Sau Đăng ký tín chỉ</span>
+                    <i class="bi bi-funnel-fill main-icon text-warning"></i>
+                    <h5>Rà soát & Xử lý Lớp học</h5>
+                    <p>Lọc các lớp có sĩ số quá thấp sau khi SV đăng ký xong. Cán bộ ra quyết định: Hủy lớp, Ghép lớp hoặc Duyệt mở ngoại lệ.</p>
+                </a>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

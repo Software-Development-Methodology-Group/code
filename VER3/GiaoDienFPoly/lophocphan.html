@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh sách lớp học phần</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        /* --- CẤU HÌNH MÀU SẮC --- */
+        :root {
+            --primary-orange: #f36f21;
+            --primary-light: #fff5ec;
+            --text-dark: #333;
+            --text-grey: #555;
+            --bg-light: #f4f6f9;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0; padding: 0;
+        }
+
+        a { text-decoration: none; color: inherit; }
+
+        /* --- SIDEBAR CHÍNH --- */
+        .main-sidebar {
+            width: 80px;
+            background-color: #fff;
+            border-right: 1px solid #dee2e6;
+            height: 100vh;
+            position: fixed;
+            left: 0; top: 0;
+            z-index: 1000;
+            padding-top: 20px;
+            display: flex; flex-direction: column; align-items: center;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+        }
+
+        .sidebar-icon {
+            width: 45px; height: 45px;
+            background-color: #f8f9fa;
+            color: #666;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; cursor: pointer; transition: 0.3s;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-icon:hover, .sidebar-icon.active {
+            background-color: var(--primary-orange);
+            color: #fff;
+            box-shadow: 0 4px 8px rgba(243, 111, 33, 0.4);
+        }
+
+        .sidebar-text {
+            font-size: 11px; margin-bottom: 20px;
+            color: #666; font-weight: 600; text-align: center;
+        }
+
+        /* --- SIDEBAR PHỤ --- */
+        .sub-sidebar {
+            width: 200px;
+            background-color: #fff;
+            height: 100vh;
+            position: fixed;
+            left: 80px; top: 0;
+            padding-top: 30px;
+            border-right: 1px solid #dee2e6;
+        }
+
+        .sub-menu-item {
+            padding: 12px 20px;
+            font-size: 15px;
+            color: var(--text-grey);
+            cursor: pointer;
+            font-weight: 500;
+            border-left: 4px solid transparent;
+            transition: all 0.2s ease;
+            margin-bottom: 5px;
+        }
+
+        .sub-menu-item:hover {
+            color: var(--primary-orange);
+            background-color: var(--primary-light);
+        }
+
+        .sub-menu-item.active {
+            background-color: var(--primary-light) !important;
+            color: var(--primary-orange) !important;
+            font-weight: bold;
+            border-left: 4px solid var(--primary-orange) !important;
+        }
+
+        /* --- NỘI DUNG CHÍNH --- */
+        .main-content-list {
+            margin-left: 280px;
+            padding: 30px;
+        }
+
+        /* --- THANH TÌM KIẾM & NÚT BẤM --- */
+        .search-container {
+            position: relative;
+            max-width: 600px;
+            width: 100%;
+        }
+        .search-input {
+            padding-left: 45px;
+            border: 2px solid #333;
+            border-radius: 30px;
+            height: 45px;
+        }
+        .search-icon {
+            position: absolute;
+            top: 12px; left: 15px;
+            color: #666;
+        }
+
+        .view-btn {
+            border: 1px solid #333;
+            color: #333;
+            font-weight: 500;
+        }
+        .view-btn:hover { background-color: #f8f9fa; }
+        
+        .view-btn.active {
+            background-color: var(--primary-orange) !important;
+            color: #fff !important;
+            border-color: var(--primary-orange) !important;
+        }
+
+        /* --- BẢNG (LIST VIEW) --- */
+        .custom-table { background: #fff; border: 1px solid #333; width: 100%; }
+        .custom-table thead { background-color: var(--primary-orange); color: white; }
+        .custom-table th { border: none; padding: 15px; text-transform: uppercase; font-size: 14px; }
+        .custom-table td { padding: 15px; vertical-align: middle; border-bottom: 1px solid #dee2e6; }
+        .hover-row:hover { background-color: var(--primary-light); cursor: pointer; transition: 0.2s; }
+
+        /* --- LƯỚI (GRID VIEW) --- */
+        .course-card .card {
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        .course-card .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border-color: var(--primary-orange);
+        }
+        .badge-subject { font-size: 12px; padding: 5px 10px; border-radius: 15px; }
+
+        /* QUAN TRỌNG: Class ẩn hiện */
+        .d-none { display: none !important; }
+        .animate-fade { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    </style>
+</head>
+<body>
+
+    <div class="main-sidebar">
+        <div class="d-flex flex-column align-items-center">
+            <div class="sidebar-icon active"><i class="bi bi-person-video3"></i></div>
+            <div class="sidebar-text">Giảng viên</div>
+        </div>
+        <div class="d-flex flex-column align-items-center">
+            <a href="khaothi-dashboard.html" class="text-decoration-none text-dark d-flex flex-column align-items-center">
+                <div class="sidebar-icon"><i class="bi bi-clipboard-check"></i></div>
+                <div class="sidebar-text">Khảo thí</div>
+            </a>
+        </div>
+         <div class="d-flex flex-column align-items-center">
+            <a href="hoidong-pheduyet.html" class="text-decoration-none text-dark d-flex flex-column align-items-center">
+                           <div class="sidebar-icon"><i class="bi bi-people"></i></div><div class="sidebar-text">Hội đồng</div>
+
+            </a>
+        </div>
+         <div class="d-flex flex-column align-items-center">
+            <a href="hethong-dashboard.html" class="text-decoration-none text-dark d-flex flex-column align-items-center">
+                <div class="sidebar-icon"><i class="bi bi-gear"></i></div>
+                <div class="sidebar-text">Hệ thống</div>
+            </a>
+        </div>
+        <div class="d-flex flex-column align-items-center mt-auto mb-3">
+             <a href="../dangnhap/dangnhap.html" class="text-decoration-none text-dark d-flex flex-column align-items-center">
+            <div class="sidebar-icon"><i class="bi bi-box-arrow-right"></i></div>
+            <div class="sidebar-text" onclick="xulyDangxuat()">Đăng xuất</div>
+        </a>
+        </div>
+    </div>
+
+    <div class="sub-sidebar">
+        <div class="sub-menu-item" onclick="window.location.href='lichgiangday.html'">Lịch giảng dạy</div>
+        <div class="sub-menu-item active" onclick="window.location.href='lophocphan.html'">Lớp học phần</div>
+        <div class="sub-menu-item" onclick="window.location.href='tailieu.html'">Tài liệu</div>
+    </div>
+
+    <div class="main-content-list">
+        <h2 class="mb-4 fw-bold text-dark">Danh sách lớp học phần</h2>
+
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            
+            <div class="search-container">
+                <i class="bi bi-search search-icon"></i>
+                <input type="text" id="searchInput" class="form-control search-input" 
+                       placeholder="Chức năng tìm kiếm theo tên học phần..." onkeyup="searchTable()">
+            </div>
+
+            <div class="btn-group" role="group">
+                <button id="btnListView" type="button" class="btn view-btn active" onclick="switchView('list', this)" title="Dạng danh sách">
+                    <i class="bi bi-list-ul"></i> 
+                </button>
+                <button id="btnGridView" type="button" class="btn view-btn" onclick="switchView('grid', this)" title="Dạng lưới">
+                    <i class="bi bi-grid-fill"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="tableView" class="table-responsive animate-fade">
+            <table class="table custom-table text-center" id="mainTable">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">STT</th>
+                        <th>Tên học phần</th>
+                        <th>Môn học</th>
+                        <th>Giảng viên</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="hover-row" onclick="goToDetail()">
+                        <td>1</td>
+                        <td class="fw-bold text-primary">Dự án mẫu (FPoly)</td>
+                        <td><span class="badge bg-warning text-dark">Java 5</span></td>
+                        <td>Nguyễn Thị Kim Dung</td>
+                    </tr>
+                    <tr class="hover-row" onclick="goToDetail()">
+                        <td>2</td>
+                        <td class="fw-bold text-primary">Lập trình C# 5</td>
+                        <td><span class="badge bg-info text-dark">.NET Core</span></td>
+                        <td>Nguyễn Thị Kim Dung</td>
+                    </tr>
+                    <tr class="hover-row" onclick="goToDetail()">
+                        <td>3</td>
+                        <td class="fw-bold text-primary">Kiểm thử phần mềm</td>
+                        <td><span class="badge bg-success">Katalon</span></td>
+                        <td>Nguyễn Thị Kim Dung</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="gridView" class="row d-none animate-fade">
+            <div class="col-md-4 mb-4 course-card" data-name="Dự án mẫu (FPoly)">
+                <div class="card h-100 shadow-sm" onclick="goToDetail()">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="badge bg-warning text-dark badge-subject">Java 5</span>
+                            <i class="bi bi-three-dots text-secondary"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">Dự án mẫu (FPoly)</h5>
+                        <p class="card-text text-muted small mt-2"><i class="bi bi-person-circle"></i> GV: Nguyễn Thị Kim Dung</p>
+                    </div>
+                    <div class="card-footer bg-white border-top-0 pt-0">
+                        <button class="btn btn-outline-dark btn-sm w-100 rounded-pill">Vào lớp</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-4 course-card" data-name="Lập trình C# 5">
+                <div class="card h-100 shadow-sm" onclick="goToDetail()">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="badge bg-info text-dark badge-subject">.NET Core</span>
+                            <i class="bi bi-three-dots text-secondary"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">Lập trình C# 5</h5>
+                        <p class="card-text text-muted small mt-2"><i class="bi bi-person-circle"></i> GV: Nguyễn Thị Kim Dung</p>
+                    </div>
+                    <div class="card-footer bg-white border-top-0 pt-0">
+                        <button class="btn btn-outline-dark btn-sm w-100 rounded-pill">Vào lớp</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-4 course-card" data-name="Kiểm thử phần mềm">
+                <div class="card h-100 shadow-sm" onclick="goToDetail()">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="badge bg-success badge-subject">Katalon</span>
+                            <i class="bi bi-three-dots text-secondary"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">Kiểm thử phần mềm</h5>
+                        <p class="card-text text-muted small mt-2"><i class="bi bi-person-circle"></i> GV: Nguyễn Thị Kim Dung</p>
+                    </div>
+                    <div class="card-footer bg-white border-top-0 pt-0">
+                        <button class="btn btn-outline-dark btn-sm w-100 rounded-pill">Vào lớp</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="noResult" class="text-center text-muted mt-5 d-none">
+            <i class="bi bi-emoji-frown fs-1"></i>
+            <p class="mt-2">Không tìm thấy học phần nào phù hợp!</p>
+        </div>
+
+    </div>
+
+    <script>
+        function goToDetail() {
+          window.location.href = 'chitiet-monhoc.html';
+        }
+
+        function searchTable() {
+            var input = document.getElementById("searchInput");
+            var filter = input.value.toUpperCase();
+            var hasResult = false;
+
+            // Tìm trong Bảng
+            var table = document.getElementById("mainTable");
+            var tr = table.getElementsByTagName("tr");
+            for (var i = 1; i < tr.length; i++) {
+                var td = tr[i].getElementsByTagName("td")[1];
+                if (td) {
+                    var txtValue = td.textContent || td.innerText;
+                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        tr[i].style.display = "";
+                        hasResult = true;
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+
+            // Tìm trong Lưới
+            var cards = document.getElementsByClassName("course-card");
+            for (var i = 0; i < cards.length; i++) {
+                var cardName = cards[i].getAttribute("data-name");
+                if (cardName && cardName.toUpperCase().indexOf(filter) > -1) {
+                    cards[i].style.display = "block";
+                    hasResult = true;
+                } else {
+                    cards[i].style.display = "none";
+                }
+            }
+
+            // Hiển thị thông báo
+            var noResultDiv = document.getElementById("noResult");
+            var tableView = document.getElementById("tableView");
+            var gridView = document.getElementById("gridView");
+
+            if (!hasResult) {
+                noResultDiv.classList.remove("d-none");
+                tableView.classList.add("d-none");
+                gridView.classList.add("d-none");
+            } else {
+                noResultDiv.classList.add("d-none");
+                
+                // ĐÃ SỬA Ở ĐÂY: Kiểm tra theo ID của nút thay vì tìm chữ
+                var btnGridActive = document.getElementById("btnGridView").classList.contains("active");
+                
+                if (btnGridActive) {
+                    gridView.classList.remove("d-none");
+                    tableView.classList.add("d-none");
+                } else {
+                    tableView.classList.remove("d-none");
+                    gridView.classList.add("d-none");
+                }
+            }
+        }
+
+        function switchView(mode, element) {
+            var tableView = document.getElementById("tableView");
+            var gridView = document.getElementById("gridView");
+            var noResultDiv = document.getElementById("noResult");
+
+            // Đổi màu nút
+            var buttons = document.querySelectorAll('.view-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+
+            // Nếu đang không có kết quả thì không làm gì cả
+            if (!noResultDiv.classList.contains('d-none')) return;
+
+            // Logic chuyển đổi
+            if (mode === 'list') {
+                tableView.classList.remove("d-none");
+                gridView.classList.add("d-none");
+            } else {
+                tableView.classList.add("d-none");
+                gridView.classList.remove("d-none");
+            }
+            
+            searchTable(); // Lọc lại nếu đang có từ khóa tìm kiếm
+        }
+    </script>
+</body>
+</html>

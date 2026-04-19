@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống - Quản lý Khung chương trình</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="/images/logo.png">
+    <style>
+        :root { 
+            --bg-light: #f4f6f9; 
+            --text-main: #333;
+            --admin-theme: #10b981; 
+            --admin-light: #ecfdf5;
+        }
+        body { background-color: var(--bg-light); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; overflow-x: hidden; font-size: 14px; color: var(--text-main);}
+
+        /* --- SIDEBAR CHÍNH --- */
+        .main-sidebar { width: 80px; background: #fff; border-right: 1px solid #dee2e6; height: 100vh; position: fixed; left: 0; top: 0; z-index: 1000; padding-top: 20px; display: flex; flex-direction: column; align-items: center; box-shadow: 2px 0 5px rgba(0,0,0,0.05); }
+        .sidebar-icon { width: 45px; height: 45px; background: #f8f9fa; color: #666; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; transition: 0.3s; margin-bottom: 5px; }
+        .sidebar-icon:hover, .sidebar-icon.active { background: var(--admin-theme); color: #fff; box-shadow: 0 4px 8px rgba(16, 185, 129, 0.4); }
+        .sidebar-text { font-size: 11px; margin-bottom: 20px; color: #666; font-weight: 600; text-align: center; }
+
+        /* --- SUB SIDEBAR (CÂY THƯ MỤC) --- */
+        .sub-sidebar { width: 330px; background: #fff; height: 100vh; position: fixed; left: 80px; top: 0; border-right: 1px solid #dee2e6; display: flex; flex-direction: column; }
+        .admin-header { padding: 20px 20px 15px 20px; border-bottom: 1px solid #eee;}
+        .tree-scroll-area { flex-grow: 1; overflow-y: auto; padding-bottom: 20px; }
+        .sidebar-footer { padding: 15px; border-top: 1px solid #dee2e6; background-color: #fcfcfc; }
+
+        /* --- STYLE CHO TREE VIEW --- */
+        .tree-menu { list-style: none; padding-left: 0; margin: 0 10px; }
+        .tree-menu ul { list-style: none; padding-left: 20px; display: none; } 
+        .tree-menu ul.open { display: block; animation: slideDown 0.2s ease; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .tree-item { padding: 10px 15px; cursor: pointer; color: #444; font-weight: 500; display: flex; align-items: center; transition: 0.2s; border-radius: 6px; margin-bottom: 2px; font-size: 14.5px;}
+        .tree-item:hover { background: var(--admin-light); color: var(--admin-theme); }
+        .tree-item.active { background: var(--admin-light); color: var(--admin-theme); font-weight: bold; border-left: 4px solid var(--admin-theme); }
+        
+        .caret { margin-right: 10px; font-size: 12px; transition: transform 0.2s; color: #adb5bd;}
+        .caret.down { transform: rotate(90deg); color: var(--admin-theme); }
+        
+        .level-1 > .tree-item { font-weight: bold; color: #222; text-transform: uppercase; font-size: 13.5px; background: #f8f9fa; margin-top: 10px;}
+        .level-2 > .tree-item i.bi-folder { color: #ffc107; margin-right: 8px; font-size: 16px;}
+        .level-2 > .tree-item i.bi-folder2-open { color: var(--admin-theme); margin-right: 8px; font-size: 16px;}
+        .level-3 > .tree-item { font-size: 14px; padding-left: 35px; }
+
+        /* --- NHÓM NÚT THÊM & XÓA (TÀNG HÌNH) --- */
+        .tree-actions { opacity: 0; transition: 0.2s; display: flex; align-items: center; gap: 4px;}
+        .tree-item:hover .tree-actions { opacity: 1; }
+        
+        .btn-add-tree { color: var(--admin-theme); padding: 4px 6px; border-radius: 4px; font-size: 15px;}
+        .btn-add-tree:hover { background-color: #d1fae5; }
+        
+        .btn-delete-tree { color: #dc3545; padding: 4px 6px; border-radius: 4px; font-size: 15px;}
+        .btn-delete-tree:hover { background-color: #ffe6e6; }
+
+        /* Khung nhập liệu Inline */
+        .inline-input-row { animation: slideDown 0.2s ease; margin-bottom: 5px; }
+        .inline-input-row input:focus { box-shadow: none; border-color: var(--admin-theme); }
+
+        /* --- MAIN CONTENT --- */
+        .main-content { margin-left: 410px; padding: 30px 40px; max-width: 1400px; animation: fadeIn 0.4s ease;}
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card-box { background: #fff; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #dee2e6; overflow: hidden; margin-bottom: 20px;}
+        .custom-table th { background-color: #f8f9fa; font-weight: 600; padding: 15px 12px; font-size: 13.5px; text-transform: uppercase; color: #555; border-bottom: 2px solid #dee2e6;}
+        .custom-table td { padding: 12px; vertical-align: middle; transition: all 0.3s; }
+        .btn-action { padding: 5px 12px; font-size: 13px; font-weight: 600; border-radius: 4px; transition: 0.2s; }
+        
+        .new-row { animation: highlightRow 1.5s ease; }
+        @keyframes highlightRow { 0% { background-color: #d1fae5; } 100% { background-color: transparent; } }
+
+        /* --- MODAL CSS --- */
+        .modal-xl { max-width: 1200px; }
+        .modal-header.admin-bg { background-color: var(--admin-theme); color: white; border-bottom: none; }
+        .modal-header .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
+        .nav-tabs .nav-link { color: #555; font-weight: 600; border: none; padding: 12px 25px; border-bottom: 3px solid transparent; margin-bottom: -1px;}
+        .nav-tabs .nav-link.active { color: var(--admin-theme); border-bottom: 3px solid var(--admin-theme); background: none;}
+        .nav-tabs .nav-link:hover:not(.active) { border-bottom: 3px solid #ddd; }
+        .section-title { font-weight: 700; color: var(--admin-theme); margin-top: 25px; margin-bottom: 15px; font-size: 15px; border-bottom: 1px dashed #ddd; padding-bottom: 8px;}
+        .form-label { font-weight: 600; color: #444; font-size: 13.5px;}
+        .form-control, .form-select { font-size: 14px; border-color: #ced4da; }
+        .form-control:focus { border-color: var(--admin-theme); box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.25); }
+        .formula-box { background-color: #f8f9fa; border: 1px dashed #adb5bd; border-radius: 8px; padding: 15px; }
+        .accordion-button:not(.collapsed) { background-color: var(--admin-light); color: var(--admin-theme); font-weight: bold; box-shadow: none; }
+        .accordion-button:focus { box-shadow: none; border-color: rgba(0,0,0,.125); }
+    </style>
+</head>
+<body>
+    
+    <div class="main-sidebar">
+        <div class="d-flex flex-column align-items-center"><a href="lichgiangday.html" class="text-decoration-none text-dark d-flex flex-column align-items-center"><div class="sidebar-icon"><i class="bi bi-person-video3"></i></div><div class="sidebar-text">Giảng viên</div></a></div>
+        <div class="d-flex flex-column align-items-center"><a href="khaothi-dashboard.html" class="text-decoration-none text-dark d-flex flex-column align-items-center"><div class="sidebar-icon"><i class="bi bi-clipboard-check"></i></div><div class="sidebar-text">Khảo thí</div></a></div>
+        <div class="d-flex flex-column align-items-center"><a href="hoidong-pheduyet.html" class="text-decoration-none text-dark d-flex flex-column align-items-center"><div class="sidebar-icon"><i class="bi bi-people-fill"></i></div><div class="sidebar-text">Hội đồng</div></a></div>
+        <div class="d-flex flex-column align-items-center"><a href="hethong-dashboard.html" class="text-decoration-none d-flex flex-column align-items-center"><div class="sidebar-icon active"><i class="bi bi-gear-fill"></i></div><div class="sidebar-text" style="color: var(--admin-theme);">Hệ thống</div></a></div>
+    </div>
+
+    <div class="sub-sidebar">
+        <div class="admin-header d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="fw-bold text-dark mb-1 d-flex align-items-center">
+                    Cấu trúc Đào tạo
+                    <button class="btn btn-sm btn-outline-success border-0 ms-2 py-0 px-1" title="Thêm Khoa mới" onclick="addInlineNode(event, null, 'khoa')"><i class="bi bi-plus-circle-fill"></i></button>
+                </h5>
+                <span class="text-muted" style="font-size: 12px;">Master Data</span>
+            </div>
+            <a href="hethong-dashboard.html" class="btn btn-sm btn-light border" title="Quay lại Dashboard"><i class="bi bi-arrow-left"></i></a>
+        </div>
+
+        <div class="tree-scroll-area">
+            <ul class="tree-menu" id="mainTree">
+                <li class="level-1">
+                    <div class="tree-item" onclick="toggleTree(this)">
+                        <i class="bi bi-caret-right-fill caret down"></i> <span class="name-label">Khoa Công nghệ thông tin</span>
+                        <div class="tree-actions ms-auto">
+                            <i class="bi bi-plus-circle-fill btn-add-tree" title="Thêm Ngành" onclick="addInlineNode(event, this, 'nganh')"></i>
+                            <i class="bi bi-trash3-fill btn-delete-tree" title="Xóa Khoa" onclick="deleteNode(event, this)"></i>
+                        </div>
+                    </div>
+                    <ul class="open">
+                        <li class="level-2">
+                            <div class="tree-item" onclick="toggleTree(this)">
+                                <i class="bi bi-caret-right-fill caret down"></i> <i class="bi bi-folder2-open"></i> <span class="name-label">Kỹ thuật phần mềm</span>
+                                <div class="tree-actions ms-auto">
+                                    <i class="bi bi-plus-circle-fill btn-add-tree" title="Thêm Học kỳ" onclick="addInlineNode(event, this, 'hocky')"></i>
+                                    <i class="bi bi-trash3-fill btn-delete-tree" title="Xóa Ngành" onclick="deleteNode(event, this)"></i>
+                                </div>
+                            </div>
+                            <ul class="open">
+                                <li class="level-3">
+                                    <div class="tree-item file-item active" onclick="selectSemester(this, 'Kỹ thuật phần mềm', 'Học kỳ 1')">
+                                        <i class="bi bi-arrow-return-right me-2 text-muted"></i> <span class="name-label">Học kỳ 1</span>
+                                        <div class="tree-actions ms-auto">
+                                            <i class="bi bi-plus-circle-fill btn-add-tree" title="Thêm Môn học" onclick="addSubject(event, this)"></i>
+                                            <i class="bi bi-trash3-fill btn-delete-tree" title="Xóa Học kỳ" onclick="deleteNode(event, this)"></i>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="level-3">
+                                    <div class="tree-item file-item" onclick="selectSemester(this, 'Kỹ thuật phần mềm', 'Học kỳ 2')">
+                                        <i class="bi bi-arrow-return-right me-2 text-muted"></i> <span class="name-label">Học kỳ 2</span>
+                                        <div class="tree-actions ms-auto">
+                                            <i class="bi bi-plus-circle-fill btn-add-tree" title="Thêm Môn học" onclick="addSubject(event, this)"></i>
+                                            <i class="bi bi-trash3-fill btn-delete-tree" title="Xóa Học kỳ" onclick="deleteNode(event, this)"></i>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </li>
+                        
+                        <li class="level-2">
+                            <div class="tree-item" onclick="toggleTree(this)">
+                                <i class="bi bi-caret-right-fill caret"></i> <i class="bi bi-folder"></i> <span class="name-label">Khoa học máy tính</span>
+                                <div class="tree-actions ms-auto">
+                                    <i class="bi bi-plus-circle-fill btn-add-tree" title="Thêm Học kỳ" onclick="addInlineNode(event, this, 'hocky')"></i>
+                                    <i class="bi bi-trash3-fill btn-delete-tree" title="Xóa Ngành" onclick="deleteNode(event, this)"></i>
+                                </div>
+                            </div>
+                            <ul>
+                                <li class="level-3">
+                                    <div class="tree-item file-item" onclick="selectSemester(this, 'Khoa học máy tính', 'Học kỳ 1')">
+                                        <i class="bi bi-arrow-return-right me-2 text-muted"></i> <span class="name-label">Học kỳ 1</span>
+                                        <div class="tree-actions ms-auto">
+                                            <i class="bi bi-plus-circle-fill btn-add-tree" title="Thêm Môn học" onclick="addSubject(event, this)"></i>
+                                            <i class="bi bi-trash3-fill btn-delete-tree" title="Xóa Học kỳ" onclick="deleteNode(event, this)"></i>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        <div class="sidebar-footer">
+            <button class="btn btn-dark w-100 fw-bold py-2 shadow-sm" onclick="submitToBoard()">
+                <i class="bi bi-send-check-fill me-2"></i> Trình HĐ Phê Duyệt
+            </button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        
+        <div class="d-flex justify-content-between align-items-end mb-4">
+            <div>
+                <h3 class="fw-bold mb-1 text-dark">Danh sách Học phần</h3>
+                <p class="text-muted mb-0 fs-5" id="dynamicTitle">Ngành: <strong class="text-primary">Kỹ thuật phần mềm</strong> | Giai đoạn: <strong class="text-danger">Học kỳ 1</strong></p>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-secondary fw-bold" onclick="downloadTemplate()">
+                    <i class="bi bi-download"></i> Tải Form Mẫu
+                </button>
+                
+                <button class="btn btn-outline-success fw-bold" onclick="triggerExcelImport()">
+                    <i class="bi bi-file-earmark-arrow-up"></i> Import Excel
+                </button>
+                <input type="file" id="excelFileInput" accept=".xlsx, .xls" style="display: none;" onchange="handleExcelUpload(event)">
+            </div>
+        </div>
+
+        <div class="card-box">
+            <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+                <div class="input-group" style="width: 300px;">
+                    <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                    <input type="text" id="searchInput" class="form-control border-start-0 ps-0" placeholder="Tìm tên môn học, mã môn..." onkeyup="filterSubjects()"> 
+                </div>
+                <button class="btn btn-success fw-bold" style="background-color: var(--admin-theme); border: none;" onclick="triggerAddSubject()"><i class="bi bi-plus-lg me-1"></i> Thêm học phần mới</button>
+            </div>
+
+            <table class="table table-hover custom-table mb-0 align-middle" id="subjectTable">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">#</th>
+                        <th style="width: 120px;">Mã HP</th>
+                        <th>Tên Học Phần</th>
+                        <th class="text-center">Số TC</th>
+                        <th>Điều kiện Tiên quyết</th>
+                        <th class="text-center">Tình trạng Đề cương</th>
+                        <th class="text-center" style="width: 250px;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="fw-bold text-muted row-number">1</td>
+                        <td class="fw-bold text-secondary">IT101</td>
+                        <td class="fw-bold text-dark">Lập trình cơ bản C/C++</td>
+                        <td class="text-center">3</td>
+                        <td><span class="text-muted fst-italic">Không</span></td>
+                        <td class="text-center"><span class="badge bg-success"><i class="bi bi-check-circle"></i> Đã hoàn thiện</span></td>
+                        <td class="text-center">
+                            <button class="btn btn-outline-primary btn-sm btn-action" title="Sửa"><i class="bi bi-pencil-square"></i></button>
+                            <button class="btn btn-outline-danger btn-sm btn-action" onclick="deleteSubjectRow(this)" title="Xóa"><i class="bi bi-trash"></i></button>
+                            <button class="btn btn-primary btn-action ms-1" onclick="openSyllabusModal()"><i class="bi bi-gear-fill me-1"></i> Cấu hình</button>
+                        </td>
+                    </tr>
+                    <tr style="background-color: #fdfdfd; border-left: 4px solid var(--admin-theme);">
+                        <td class="fw-bold text-muted row-number">2</td>
+                        <td class="fw-bold text-secondary">KTPM01</td>
+                        <td class="fw-bold text-dark fs-6">Kiểm thử & ĐBCL phần mềm</td>
+                        <td class="text-center fw-bold text-primary">3</td>
+                        <td><span class="badge bg-light text-dark border">IT102</span></td>
+                        <td class="text-center syllabus-status"><span class="badge bg-warning text-dark"><i class="bi bi-exclamation-circle"></i> Đang soạn thảo</span></td>
+                        <td class="text-center">
+                            <button class="btn btn-outline-primary btn-sm btn-action" title="Sửa"><i class="bi bi-pencil-square"></i></button>
+                            <button class="btn btn-outline-danger btn-sm btn-action" onclick="deleteSubjectRow(this)" title="Xóa"><i class="bi bi-trash"></i></button>
+                            <button class="btn btn-primary btn-action ms-1 shadow-sm" onclick="openSyllabusModal()"><i class="bi bi-gear-fill me-1"></i> Cấu hình</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="modal fade" id="syllabusModal" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header admin-bg">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-journal-richtext me-2"></i> Cấu hình Đề cương học phần: Kiểm thử và đảm bảo chất lượng phần mềm</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0 bg-light">
+                    <ul class="nav nav-tabs bg-white pt-2 px-3 border-bottom shadow-sm" id="syllabusTabs" role="tablist" style="position: sticky; top: 0; z-index: 10;">
+                        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-general" type="button"><i class="bi bi-info-circle me-1"></i> 1. Thông tin chung & Mục tiêu</button></li>
+                        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-grading" type="button"><i class="bi bi-calculator me-1"></i> 2. Quy định Điểm & ĐK Dự thi</button></li>
+                        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-lessons" type="button"><i class="bi bi-list-task me-1"></i> 3. Nội dung giảng dạy (Bài học)</button></li>
+                    </ul>
+
+                    <div class="tab-content p-4" id="syllabusTabsContent">
+                        <div class="tab-pane fade show active" id="tab-general" role="tabpanel">
+                            <div class="bg-white p-4 rounded border">
+                                <div class="row g-3">
+                                    <div class="col-md-8"><label class="form-label">Tên học phần</label><input type="text" class="form-control fw-bold" value="Kiểm thử và đảm bảo chất lượng phần mềm"></div>
+                                    <div class="col-md-4"><label class="form-label">Mã học phần</label><input type="text" class="form-control" value="KTPM01"></div>
+                                    <div class="col-md-4"><label class="form-label">Tổng số tín chỉ</label><input type="number" class="form-control text-primary fw-bold" value="3"></div>
+                                    <div class="col-md-4"><label class="form-label">Tín chỉ Lý thuyết</label><input type="number" class="form-control" value="2"></div>
+                                    <div class="col-md-4"><label class="form-label">Tín chỉ Thực hành</label><input type="number" class="form-control" value="1"></div>
+                                </div>
+                                <div class="section-title">Mục tiêu môn học</div>
+                                <div class="mb-3"><label class="form-label text-primary">Mục tiêu kiến thức:</label><textarea class="form-control" rows="3">Cung cấp kiến thức về vai trò của kiểm thử phần mềm...</textarea></div>
+                                <div class="mb-3"><label class="form-label text-success">Mục tiêu kỹ năng:</label><textarea class="form-control" rows="2">Sinh viên có khả năng phân tích, thiết kế ca kiểm thử...</textarea></div>
+                                <div class="section-title">Chuẩn đầu ra (CLO)</div>
+                                <textarea class="form-control" rows="3">- Hiểu được kiến thức cơ bản...&#10;- Có khả năng áp dụng kỹ thuật kiểm thử...</textarea>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="tab-grading" role="tabpanel">
+                            <div class="bg-white p-4 rounded border">
+                                <div class="section-title mt-0">Công thức tính Điểm Tổng Kết (TKHP)</div>
+                                <div class="formula-box mb-4">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <span class="fs-5 fw-bold text-dark">[ĐIỂM HP] = </span>
+                                        <div class="input-group" style="width: 140px;"><span class="input-group-text bg-white border-end-0 fw-bold">[TDL] x</span><input type="number" class="form-control border-start-0 text-center text-danger fw-bold" value="5"><span class="input-group-text bg-white border-start-0">%</span></div>
+                                        <span class="fw-bold">+</span>
+                                        <div class="input-group" style="width: 150px;"><span class="input-group-text bg-white border-end-0 fw-bold">[TBTN] x</span><input type="number" class="form-control border-start-0 text-center text-danger fw-bold" value="15"><span class="input-group-text bg-white border-start-0">%</span></div>
+                                        <span class="fw-bold">+</span>
+                                        <div class="input-group" style="width: 150px;"><span class="input-group-text bg-white border-end-0 fw-bold">[TBKT] x</span><input type="number" class="form-control border-start-0 text-center text-danger fw-bold" value="30"><span class="input-group-text bg-white border-start-0">%</span></div>
+                                        <span class="fw-bold">+</span>
+                                        <div class="input-group" style="width: 140px;"><span class="input-group-text bg-white border-end-0 fw-bold">[THI] x</span><input type="number" class="form-control border-start-0 text-center text-danger fw-bold" value="50"><span class="input-group-text bg-white border-start-0">%</span></div>
+                                    </div>
+                                </div>
+                                <div class="row g-4 mb-3">
+                                    <div class="col-md-4"><label class="form-label">Hình thức thi Final</label><select class="form-select text-primary fw-bold"><option selected>Thực hành</option></select></div>
+                                    <div class="col-md-4"><label class="form-label">Thời gian thi</label><div class="input-group"><input type="number" class="form-control" value="90"><span class="input-group-text">Phút</span></div></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="tab-lessons" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="fw-bold text-dark mb-0">Danh sách bài học</h6>
+                                <button class="btn btn-sm btn-outline-success"><i class="bi bi-plus-circle"></i> Thêm Bài Mới</button>
+                            </div>
+                            <div class="accordion" id="lessonAccordion">
+                                <div class="accordion-item border mb-3 rounded overflow-hidden shadow-sm">
+                                    <h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#lesson1">BÀI 1: TỔNG QUAN KIỂM THỬ</button></h2>
+                                    <div id="lesson1" class="accordion-collapse collapse show" data-bs-parent="#lessonAccordion">
+                                        <div class="accordion-body bg-white text-muted"> Nội dung chi tiết bài học...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-white border-top shadow-sm d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-secondary fw-bold px-4" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <button type="button" class="btn btn-success fw-bold px-4" style="background-color: var(--admin-theme);" onclick="saveSyllabus()">
+                        <i class="bi bi-shield-check me-2"></i> Kiểm tra Logic & Lưu
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container position-fixed top-0 end-0 p-4" style="z-index: 1060;">
+        <div id="actionToast" class="toast align-items-center text-white border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body fw-bold fs-6" id="toastMsg">Thông báo</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Hàm Toast
+        function showToast(msg, typeClass) {
+            let toastEl = document.getElementById('actionToast');
+            toastEl.className = `toast align-items-center text-white border-0 ${typeClass}`;
+            document.getElementById('toastMsg').innerHTML = msg;
+            new bootstrap.Toast(toastEl).show();
+        }
+
+        // Đóng/Mở thư mục
+        function toggleTree(element) {
+            const childUl = element.nextElementSibling;
+            if(childUl && childUl.tagName === 'UL') {
+                childUl.classList.toggle('open');
+                const caret = element.querySelector('.caret');
+                if(caret) caret.classList.toggle('down');
+                const folderIcon = element.querySelector('.bi-folder, .bi-folder2-open');
+                if(folderIcon) {
+                    if(folderIcon.classList.contains('bi-folder')) folderIcon.classList.replace('bi-folder', 'bi-folder2-open');
+                    else folderIcon.classList.replace('bi-folder2-open', 'bi-folder');
+                }
+            }
+        }
+
+        function selectSemester(element, nganh, hocky) {
+            document.querySelectorAll('.file-item').forEach(item => item.classList.remove('active'));
+            element.classList.add('active');
+            document.getElementById('dynamicTitle').innerHTML = `Ngành: <strong class="text-primary">${nganh}</strong> | Giai đoạn: <strong class="text-danger">${hocky}</strong>`;
+            showToast(`<i class="bi bi-cloud-arrow-down-fill me-2"></i> Đang tải dữ liệu môn học của ${hocky}...`, 'bg-primary');
+        }
+
+        // Tree View: Xóa Node
+        function deleteNode(event, btnElement) {
+            event.stopPropagation(); 
+            if(confirm('CẢNH BÁO: Bạn có chắc chắn muốn xóa mục này cùng toàn bộ nội dung bên trong?')) {
+                const liElement = btnElement.closest('li');
+                liElement.style.transition = "0.3s";
+                liElement.style.opacity = "0";
+                setTimeout(() => {
+                    liElement.remove();
+                    showToast('<i class="bi bi-trash3-fill me-2"></i> Đã xóa thư mục thành công!', 'bg-danger');
+                }, 300);
+            }
+        }
+
+        // Tree View: Thêm Node Inline
+        function addInlineNode(event, btnElement, type) {
+            if(event) event.stopPropagation();
+
+            let parentUl;
+            let parentNganhName = '';
+
+            if (type === 'khoa') {
+                parentUl = document.getElementById('mainTree');
+            } else {
+                const parentLi = btnElement.closest('li');
+                parentUl = parentLi.querySelector('ul');
+                if(!parentUl) {
+                    parentUl = document.createElement('ul');
+                    parentLi.appendChild(parentUl);
+                }
+                parentUl.classList.add('open');
+                let caret = parentLi.querySelector(':scope > .tree-item .caret');
+                if(caret) caret.classList.add('down');
+                let folder = parentLi.querySelector(':scope > .tree-item .bi-folder');
+                if(folder) folder.classList.replace('bi-folder', 'bi-folder2-open');
+
+                if(type === 'hocky') parentNganhName = parentLi.querySelector(':scope > .tree-item .name-label').innerText;
+            }
+
+            if (parentUl.querySelector(':scope > .inline-input-row')) {
+                parentUl.querySelector(':scope > .inline-input-row input').focus();
+                return;
+            }
+
+            let placeholder = type === 'khoa' ? 'Nhập tên Khoa mới...' : (type === 'nganh' ? 'Nhập tên Ngành...' : 'Tên Học kỳ...');
+            let marginFix = type === 'khoa' ? 'margin: 5px 10px;' : 'margin: 5px 0 5px 25px;';
+
+            let inlineHtml = `
+                <li class="inline-input-row" style="${marginFix}">
+                    <div class="input-group input-group-sm w-75 shadow-sm">
+                        <input type="text" class="form-control border-success" placeholder="${placeholder}" onkeypress="handleInlineEnter(event, this, '${type}', '${parentNganhName}')">
+                        <button class="btn btn-success" type="button" onclick="saveInlineNode(this, '${type}', '${parentNganhName}')" title="Lưu"><i class="bi bi-check-lg"></i></button>
+                        <button class="btn btn-outline-danger" type="button" onclick="this.closest('.inline-input-row').remove()" title="Hủy"><i class="bi bi-x-lg"></i></button>
+                    </div>
+                </li>
+            `;
+            parentUl.insertAdjacentHTML('beforeend', inlineHtml);
+            parentUl.querySelector(':scope > .inline-input-row input').focus();
+        }
+
+        function handleInlineEnter(event, inputEl, type, parentNganhName) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                saveInlineNode(inputEl, type, parentNganhName);
+            }
+        }
+
+        function saveInlineNode(el, type, parentNganhName) {
+            const row = el.closest('.inline-input-row');
+            const input = row.querySelector('input');
+            const val = input.value.trim();
+
+            if(!val) {
+                showToast('<i class="bi bi-exclamation-triangle-fill me-2"></i> Vui lòng nhập tên!', 'bg-warning text-dark');
+                input.focus();
+                return;
+            }
+
+            const parentUl = row.closest('ul');
+            let isDuplicate = false;
+            Array.from(parentUl.children).forEach(li => {
+                if(li.classList.contains('inline-input-row')) return;
+                const label = li.querySelector('.name-label'); 
+                if(label && label.innerText.trim().toLowerCase() === val.toLowerCase()) isDuplicate = true;
+            });
+
+            if(isDuplicate) {
+                showToast(`<i class="bi bi-x-circle-fill me-2"></i> <strong>${val}</strong> đã tồn tại trong mục này!`, 'bg-danger');
+                input.focus();
+                return;
+            }
+
+            let newHtml = '';
+            if(type === 'khoa') {
+                 newHtml = `<li class="level-1"><div class="tree-item" onclick="toggleTree(this)"><i class="bi bi-caret-right-fill caret"></i> <span class="name-label">${val}</span><div class="tree-actions ms-auto"><i class="bi bi-plus-circle-fill btn-add-tree" title="Thêm Ngành" onclick="addInlineNode(event, this, 'nganh')"></i><i class="bi bi-trash3-fill btn-delete-tree" title="Xóa Khoa" onclick="deleteNode(event, this)"></i></div></div></li>`;
+            } else if(type === 'nganh') {
+                newHtml = `<li class="level-2"><div class="tree-item" onclick="toggleTree(this)"><i class="bi bi-caret-right-fill caret"></i> <i class="bi bi-folder"></i> <span class="name-label">${val}</span><div class="tree-actions ms-auto"><i class="bi bi-plus-circle-fill btn-add-tree" title="Thêm Học kỳ" onclick="addInlineNode(event, this, 'hocky')"></i><i class="bi bi-trash3-fill btn-delete-tree" title="Xóa Ngành" onclick="deleteNode(event, this)"></i></div></div></li>`;
+            } else if(type === 'hocky') {
+                newHtml = `<li class="level-3"><div class="tree-item file-item" onclick="selectSemester(this, '${parentNganhName}', '${val}')"><i class="bi bi-arrow-return-right me-2 text-muted"></i> <span class="name-label">${val}</span><div class="tree-actions ms-auto"><i class="bi bi-plus-circle-fill btn-add-tree" title="Thêm Môn học" onclick="addSubject(event, this)"></i><i class="bi bi-trash3-fill btn-delete-tree" title="Xóa Học kỳ" onclick="deleteNode(event, this)"></i></div></div></li>`;
+            }
+
+            row.insertAdjacentHTML('beforebegin', newHtml);
+            row.remove();
+            showToast(`<i class="bi bi-check-circle-fill me-2"></i> Đã thêm: <strong>${val}</strong>`, 'bg-success');
+        }
+
+        // Bảng Môn học: Thêm / Xóa
+        function addSubject(event, btnElement) {
+            event.stopPropagation();
+            let treeItem = btnElement.closest('.tree-item');
+            treeItem.click();
+            setTimeout(() => { triggerAddSubject(); }, 400); 
+        }
+
+        function triggerAddSubject() {
+            let subjectName = prompt("Nhập tên học phần muốn thêm:");
+            if(subjectName && subjectName.trim() !== "") {
+                let tbody = document.querySelector('#subjectTable tbody');
+                let randomCode = "NEW" + Math.floor(Math.random() * 900 + 100); 
+                let newRow = document.createElement('tr');
+                newRow.className = "new-row"; 
+                newRow.innerHTML = `
+                    <td class="fw-bold text-muted row-number">0</td>
+                    <td class="fw-bold text-secondary">${randomCode}</td>
+                    <td class="fw-bold text-dark">${subjectName}</td>
+                    <td class="text-center">3</td>
+                    <td><span class="text-muted fst-italic">Không</span></td>
+                    <td class="text-center syllabus-status"><span class="badge bg-secondary">Chưa cấu hình</span></td>
+                    <td class="text-center">
+                        <button class="btn btn-outline-primary btn-sm btn-action" title="Sửa"><i class="bi bi-pencil-square"></i></button>
+                        <button class="btn btn-outline-danger btn-sm btn-action" onclick="deleteSubjectRow(this)"><i class="bi bi-trash"></i></button>
+                        <button class="btn btn-primary btn-action ms-1" onclick="openSyllabusModal()"><i class="bi bi-gear-fill me-1"></i> Cấu hình</button>
+                    </td>
+                `;
+                tbody.appendChild(newRow);
+                updateRowNumbers();
+                showToast(`<i class="bi bi-node-plus-fill me-2"></i> Đã thêm học phần: <strong>${subjectName}</strong>`, 'bg-success');
+            }
+        }
+
+        function deleteSubjectRow(btn) {
+            if(confirm("Bạn có chắc chắn muốn xóa học phần này khỏi khung chương trình?")) {
+                let row = btn.closest('tr');
+                row.style.opacity = '0';
+                row.style.transform = 'translateX(-20px)';
+                setTimeout(() => {
+                    row.remove();
+                    updateRowNumbers(); 
+                    showToast('<i class="bi bi-trash3-fill me-2"></i> Đã xóa học phần thành công!', 'bg-danger');
+                }, 300);
+            }
+        }
+
+        function updateRowNumbers() {
+            let rows = document.querySelectorAll('#subjectTable tbody tr');
+            rows.forEach((row, index) => { row.querySelector('.row-number').innerText = index + 1; });
+        }
+
+        function submitToBoard() { showToast('<i class="bi bi-send-check-fill me-2"></i> Đã gửi hồ sơ Master Data lên Hội Đồng Phê Duyệt!', 'bg-success'); }
+        function openSyllabusModal() { new bootstrap.Modal(document.getElementById('syllabusModal')).show(); }
+        function saveSyllabus() {
+            let btn = event.currentTarget;
+            let originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Đang quét logic...';
+            btn.disabled = true;
+            setTimeout(() => {
+                bootstrap.Modal.getInstance(document.getElementById('syllabusModal')).hide();
+                showToast('<i class="bi bi-check-circle-fill me-2"></i> Lưu cấu hình thành công!', 'bg-success');
+                
+                let rows = document.querySelectorAll('#subjectTable tbody tr');
+                let lastRow = rows[rows.length - 1];
+                if(lastRow) lastRow.querySelector('.syllabus-status').innerHTML = '<span class="badge bg-success"><i class="bi bi-check-circle"></i> Đã hoàn thiện</span>';
+
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }, 1000); 
+        }
+
+        // ==========================================
+        // SỰ KIỆN: EXCEL (MỚI THÊM)
+        // ==========================================
+        function downloadTemplate() {
+            showToast('<i class="bi bi-cloud-arrow-down-fill me-2 fs-5"></i> Đang tải file <strong>Mau_Khung_CTDT.xlsx</strong> về máy...', 'bg-primary');
+            setTimeout(() => { showToast('<i class="bi bi-check-circle-fill me-2 fs-5"></i> Tải file mẫu thành công!', 'bg-success'); }, 1500);
+        }
+
+        function triggerExcelImport() { document.getElementById('excelFileInput').click(); }
+
+        function handleExcelUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return; 
+
+            showToast(`<span class="spinner-border spinner-border-sm me-2"></span> Đang đọc dữ liệu từ file <strong>${file.name}</strong>...`, 'bg-info text-dark');
+
+            setTimeout(() => {
+                event.target.value = '';
+                showToast('<i class="bi bi-check-circle-fill me-2 fs-5"></i> Import thành công! Đã thêm 2 học phần mới vào danh sách.', 'bg-success');
+                addMockImportedSubjects();
+            }, 2000);
+        }
+
+        function addMockImportedSubjects() {
+            let tbody = document.querySelector('#subjectTable tbody');
+            let mockData = [
+                { code: "KTPM02", name: "Kiểm thử tự động (Automation)", tc: 4, prereq: "KTPM01" },
+                { code: "KTPM03", name: "Đảm bảo chất lượng phần mềm (SQA)", tc: 3, prereq: "KTPM01" }
+            ];
+
+            mockData.forEach(subject => {
+                let newRow = document.createElement('tr');
+                newRow.className = "new-row"; 
+                newRow.innerHTML = `
+                    <td class="fw-bold text-muted row-number">0</td>
+                    <td class="fw-bold text-secondary">${subject.code}</td>
+                    <td class="fw-bold text-dark">${subject.name}</td>
+                    <td class="text-center">${subject.tc}</td>
+                    <td><span class="badge bg-light text-dark border">${subject.prereq}</span></td>
+                    <td class="text-center syllabus-status"><span class="badge bg-secondary">Chưa cấu hình</span></td>
+                    <td class="text-center">
+                        <button class="btn btn-outline-primary btn-sm btn-action" title="Sửa"><i class="bi bi-pencil-square"></i></button>
+                        <button class="btn btn-outline-danger btn-sm btn-action" title="Xóa" onclick="deleteSubjectRow(this)"><i class="bi bi-trash"></i></button>
+                        <button class="btn btn-primary btn-action ms-1" onclick="openSyllabusModal()"><i class="bi bi-gear-fill me-1"></i> Cấu hình</button>
+                    </td>
+                `;
+                tbody.appendChild(newRow);
+            });
+            updateRowNumbers();
+        }
+
+        // ==========================================
+        // SỰ KIỆN: TÌM KIẾM MÔN HỌC TRONG BẢNG (REALTIME)
+        // ==========================================
+        function filterSubjects() {
+            // Lấy từ khóa người dùng nhập và chuyển thành chữ thường
+            let input = document.getElementById("searchInput").value.toLowerCase();
+            let tbody = document.querySelector("#subjectTable tbody");
+            let rows = tbody.querySelectorAll("tr");
+
+            // Duyệt qua từng dòng trong bảng
+            rows.forEach(row => {
+                // Lấy nội dung của cột Mã HP (cột số 2) và Tên HP (cột số 3)
+                let maHP = row.querySelectorAll("td")[1].innerText.toLowerCase();
+                let tenHP = row.querySelectorAll("td")[2].innerText.toLowerCase();
+                
+                // Nếu Mã HP hoặc Tên HP có chứa từ khóa thì hiện, ngược lại thì ẩn
+                if (maHP.includes(input) || tenHP.includes(input)) {
+                    row.style.display = ""; 
+                } else {
+                    row.style.display = "none"; 
+                }
+            });
+        }
+    </script>
+</body>
+</html>

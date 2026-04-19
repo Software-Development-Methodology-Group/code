@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng điểm danh</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="/images/logo.png">
+    <style>
+        :root { 
+            --primary-orange: #f36f21; 
+            --primary-light: #fff5ec; 
+            --bg-light: #f4f6f9; 
+            --text-main: #333;
+        }
+        body { background-color: var(--bg-light); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
+
+        /* --- SIDEBAR CHÍNH --- */
+        .main-sidebar { width: 80px; background: #fff; border-right: 1px solid #dee2e6; height: 100vh; position: fixed; left: 0; top: 0; z-index: 1000; padding-top: 20px; display: flex; flex-direction: column; align-items: center; box-shadow: 2px 0 5px rgba(0,0,0,0.05); }
+        .sidebar-icon { width: 45px; height: 45px; background: #f8f9fa; color: #666; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; transition: 0.3s; margin-bottom: 5px; }
+        .sidebar-icon:hover { background: var(--primary-orange); color: #fff; }
+        .sidebar-text { font-size: 11px; margin-bottom: 20px; color: #666; font-weight: 600; text-align: center; }
+
+        /* --- SIDEBAR PHỤ (MENU MÔN HỌC) --- */
+        .sub-sidebar { width: 200px; background: #fff; height: 100vh; position: fixed; left: 80px; top: 0; border-right: 1px solid #bababa; overflow-y: auto; }
+        .course-header { padding: 25px 20px 15px 20px; border-bottom: 1px solid #eee; margin-bottom: 15px; }
+        .sub-menu-item { display: flex; align-items: center; padding: 15px 20px; font-size: 12px; color: var(--text-main); text-decoration: none; font-weight: 500; border-left: 4px solid transparent; transition: 0.2s ease; }
+        .sub-menu-item i { font-size: 1.2rem; margin-right: 15px; color: #555; width: 25px; text-align: center; }
+        .sub-menu-item:hover, .sub-menu-item.active { background: var(--primary-light); color: var(--primary-orange); }
+        .sub-menu-item:hover i, .sub-menu-item.active i { color: var(--primary-orange); }
+        .sub-menu-item.active { font-weight: bold; border-left: 4px solid var(--primary-orange); }
+
+        /* --- NỘI DUNG CHÍNH --- */
+        .main-content { margin-left: 250px; padding: 40px; max-width: 1300px; }
+
+        /* ================== STYLE THEO CHUẨN ẢNH 2 (MENU CON & ĐƯỜNG KẺ) ================== */
+        
+        /* 1. Đường kẻ dọc ngăn cách */
+        .vertical-divider {
+            border-right: 1px solid #ababab;
+            padding-right: 10px;
+            min-height: 70vh;
+        }
+
+        /* 2. Menu con (Danh sách các Tuần) */
+        .week-item {
+            font-size: 12px;
+            color: #222;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 4px solid transparent;
+            border-radius: 0 6px 6px 0;
+            background-color: #eaeaea;
+            font-weight: bold;
+        }
+        .week-item:hover { color: var(--primary-orange); background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .week-item.active { color: var(--primary-orange); font-weight: 700; border-left: 4px solid var(--primary-orange); background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .week-date { font-size: 13px; color: #777; font-weight: normal; margin-top: 4px; display: block; }
+
+        /* 3. Danh sách điểm danh (Bên phải) */
+        .attendance-wrapper { padding-left: 20px; }
+        .attendance-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 0; border-bottom: 1px solid #e9ecef; transition: background-color 0.2s;
+        }
+        .attendance-row:hover { background-color: #fff; }
+        
+        .student-info { display: flex; align-items: center; gap: 15px; }
+        .student-stt { width: 30px; font-weight: 600; color: #555; text-align: center; }
+        .student-name { font-size: 15.5px; font-weight: 600; color: #222; }
+        .student-id { font-size: 13px; color: #888; }
+
+        /* 4. Các nút bấm điểm danh */
+        .btn-att {
+            border: 1px solid #ced4da; background: #fff; color: #555; padding: 6px 14px;
+            font-size: 13.5px; font-weight: 600; border-radius: 6px; margin-left: 8px; transition: all 0.2s;
+        }
+        .btn-att:hover { background: #f8f9fa; border-color: #adb5bd; }
+        
+        /* Trạng thái khi được chọn (Active) */
+        .btn-co.active { background: #198754; color: #fff; border-color: #198754; box-shadow: 0 2px 5px rgba(25, 135, 84, 0.3); }
+        .btn-vangk.active { background: #dc3545; color: #fff; border-color: #dc3545; box-shadow: 0 2px 5px rgba(220, 53, 69, 0.3); }
+        .btn-vangp.active { background: #fd7e14; color: #fff; border-color: #fd7e14; box-shadow: 0 2px 5px rgba(253, 126, 20, 0.3); }
+        .btn-muon.active { background: #ffc107; color: #000; border-color: #ffc107; box-shadow: 0 2px 5px rgba(255, 193, 7, 0.3); }
+
+        /* STYLE TOAST NOTIFICATION */
+        .toast { border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 8px; }
+        .toast-header { border-bottom: none; border-radius: 8px 8px 0 0; }
+        .toast-body { font-size: 15px; color: #444; background-color: #fff; border-radius: 0 0 8px 8px; }
+    </style>
+</head>
+<body>
+    
+    <div class="main-sidebar">
+        <div class="d-flex flex-column align-items-center"><a href="index.html" class="text-decoration-none text-dark d-flex flex-column align-items-center"><div class="sidebar-icon"><i class="bi bi-person-video3"></i></div><div class="sidebar-text">Giảng viên</div></a></div>
+<div class="d-flex flex-column align-items-center">
+            <a href="khaothi-dashboard.html" class="text-decoration-none text-dark d-flex flex-column align-items-center">
+                <div class="sidebar-icon"><i class="bi bi-clipboard-check"></i></div>
+                <div class="sidebar-text">Khảo thí</div>
+            </a>
+        </div>        
+ <div class="d-flex flex-column align-items-center">
+            <a href="hoidong-pheduyet.html" class="text-decoration-none text-dark d-flex flex-column align-items-center">
+                           <div class="sidebar-icon"><i class="bi bi-people"></i></div><div class="sidebar-text">Hội đồng</div>
+
+            </a>
+        </div>       
+        <div class="d-flex flex-column align-items-center">
+            <a href="hethong-dashboard.html" class="text-decoration-none text-dark d-flex flex-column align-items-center">
+                <div class="sidebar-icon"><i class="bi bi-gear"></i></div>
+                <div class="sidebar-text">Hệ thống</div>
+            </a>
+        </div>
+        <div class="d-flex flex-column align-items-center mt-auto mb-3"> <a href="../dangnhap/dangnhap.html" class="text-decoration-none text-dark d-flex flex-column align-items-center">
+            <div class="sidebar-icon"><i class="bi bi-box-arrow-right"></i></div>
+            <div class="sidebar-text" onclick="xulyDangxuat()">Đăng xuất</div>
+        </a></div>
+    </div>
+
+    <div class="sub-sidebar">
+        <div class="course-header">
+            <a href="lophocphan.html" class="text-decoration-none text-dark d-inline-block mb-3" style="font-size: 14px;">
+                <i class="bi bi-arrow-left"></i> Quay lại danh sách
+            </a>
+            <h5 class="fw-bold text-dark mb-1">Kiểm thử phần mềm</h5>
+            <span class="badge bg-success text-white">Katalon</span>
+        </div>
+        <a href="thongtinlophoc.html" class="sub-menu-item"><i class="bi bi-info-circle"></i> Thông tin lớp học</a>
+        <a href="noidunggiangday.html" class="sub-menu-item"><i class="bi bi-book"></i> Nội dung giảng dạy</a>
+        <a href="quanlydiem.html" class="sub-menu-item"><i class="bi bi-journal-check"></i> Quản lý điểm</a>
+        <a href="diemdanh.html" class="sub-menu-item active"><i class="bi bi-calendar2-check"></i> Bảng điểm danh</a>
+    </div>
+
+    <div class="main-content">
+        
+        <div class="row">
+            
+            <div class="col-md-4 col-lg-3 vertical-divider">
+                <h5 class="fw-bold mb-4 text-dark text-uppercase"><i class="bi bi-calendar-week me-2"></i> Thời khóa biểu</h5>
+                
+                <div class="week-item active" onclick="changeWeek(this, 'TUẦN 27', '10-01-2026')">
+                    Tuần 27: 10-01-2026
+                    <span class="week-date">Thứ 2 | Ca 1,2,3,4,5</span>
+                </div>
+                
+                <div class="week-item" onclick="changeWeek(this, 'TUẦN 28', '17-01-2026')">
+                    Tuần 28: 17-01-2026
+                    <span class="week-date">Thứ 2 | Ca 1,2,3,4,5</span>
+                </div>
+                
+                <div class="week-item" onclick="changeWeek(this, 'TUẦN 29', '24-01-2026')">
+                    Tuần 29: 24-01-2026
+                    <span class="week-date">Thứ 2 | Ca 1,2,3,4,5</span>
+                </div>
+                
+                <div class="week-item" onclick="changeWeek(this, 'TUẦN 30', '31-01-2026')">
+                    Tuần 30: 31-01-2026
+                    <span class="week-date">Thứ 2 | Ca 1,2,3,4,5</span>
+                </div>
+
+                <div class="week-item" onclick="changeWeek(this, 'TUẦN 31', '08-02-2026')">
+                    Tuần 31: 08-02-2026
+                    <span class="week-date">Thứ 2 | Ca 1,2,3,4,5</span>
+                </div>
+            </div>
+
+            <div class="col-md-8 col-lg-9 attendance-wrapper">
+                
+                <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                    <div>
+                        <h4 class="fw-bold text-dark mb-1" id="displayWeekTitle">TUẦN 27 (10-01-2026)</h4>
+                        <span class="text-muted"><i class="bi bi-people-fill"></i> Tổng SV: 40</span>
+                    </div>
+                    <button class="btn btn-primary fw-medium px-4 shadow-sm" onclick="showNotification('Thành công', 'Đã lưu dữ liệu điểm danh thành công!', 'success', 'bi-check-circle-fill')">
+                        <i class="bi bi-floppy"></i> Lưu điểm danh
+                    </button>
+                </div>
+
+                <div class="bg-white p-3 rounded border mb-4 d-flex gap-4 fw-medium text-secondary shadow-sm">
+                    <span class="text-success"><i class="bi bi-check-circle-fill"></i> Có mặt: 38</span>
+                    <span class="text-danger"><i class="bi bi-x-circle-fill"></i> Vắng K: 1</span>
+                    <span class="text-warning text-dark"><i class="bi bi-exclamation-circle-fill"></i> Vắng P: 0</span>
+                    <span class="text-dark"><i class="bi bi-clock-fill"></i> Muộn: 1</span>
+                </div>
+
+                <div class="d-flex justify-content-between text-muted fw-bold pb-2 border-bottom" style="font-size: 14px;">
+                    <div style="padding-left: 15px;"># &nbsp;&nbsp;&nbsp; HỌ VÀ TÊN SINH VIÊN</div>
+                    <div style="padding-right: 60px;">CHỌN TRẠNG THÁI</div>
+                </div>
+
+                <div class="attendance-list">
+                    
+                    <div class="attendance-row">
+                        <div class="student-info">
+                            <div class="student-stt">1</div>
+                            <div>
+                                <div class="student-name">Lý Văn An</div>
+                                <div class="student-id">dtc235180003</div>
+                            </div>
+                        </div>
+                        <div class="attendance-actions">
+                            <button class="btn-att btn-co active" onclick="mark(this)">Có</button>
+                            <button class="btn-att btn-vangk" onclick="mark(this)">Vắng K</button>
+                            <button class="btn-att btn-vangp" onclick="mark(this)">Vắng P</button>
+                            <button class="btn-att btn-muon" onclick="mark(this)">Muộn</button>
+                        </div>
+                    </div>
+
+                    <div class="attendance-row">
+                        <div class="student-info">
+                            <div class="student-stt">2</div>
+                            <div>
+                                <div class="student-name">Lê Văn An</div>
+                                <div class="student-id">dtc235180002</div>
+                            </div>
+                        </div>
+                        <div class="attendance-actions">
+                            <button class="btn-att btn-co active" onclick="mark(this)">Có</button>
+                            <button class="btn-att btn-vangk" onclick="mark(this)">Vắng K</button>
+                            <button class="btn-att btn-vangp" onclick="mark(this)">Vắng P</button>
+                            <button class="btn-att btn-muon" onclick="mark(this)">Muộn</button>
+                        </div>
+                    </div>
+
+                    <div class="attendance-row">
+                        <div class="student-info">
+                            <div class="student-stt">3</div>
+                            <div>
+                                <div class="student-name">Chu Tuấn Anh</div>
+                                <div class="student-id">dtc235200013</div>
+                            </div>
+                        </div>
+                        <div class="attendance-actions">
+                            <button class="btn-att btn-co" onclick="mark(this)">Có</button>
+                            <button class="btn-att btn-vangk active" onclick="mark(this)">Vắng K</button>
+                            <button class="btn-att btn-vangp" onclick="mark(this)">Vắng P</button>
+                            <button class="btn-att btn-muon" onclick="mark(this)">Muộn</button>
+                        </div>
+                    </div>
+
+                    <div class="attendance-row">
+                        <div class="student-info">
+                            <div class="student-stt">4</div>
+                            <div>
+                                <div class="student-name">Nguyễn Minh Anh</div>
+                                <div class="student-id">dtc235180011</div>
+                            </div>
+                        </div>
+                        <div class="attendance-actions">
+                            <button class="btn-att btn-co" onclick="mark(this)">Có</button>
+                            <button class="btn-att btn-vangk" onclick="mark(this)">Vắng K</button>
+                            <button class="btn-att btn-vangp" onclick="mark(this)">Vắng P</button>
+                            <button class="btn-att btn-muon active" onclick="mark(this)">Muộn</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="toast-container position-fixed top-0 end-0 p-4" style="z-index: 1055;">
+        <div id="actionToast" class="toast align-items-center" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3000">
+            <div class="toast-header text-white" id="toastHeader">
+                <i class="bi" id="toastIcon" style="margin-right: 10px; font-size: 1.1rem;"></i>
+                <strong class="me-auto" id="toastTitle">Thông báo</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body fw-medium" id="toastMessage">
+                </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Hàm hiển thị thông báo Toast
+        function showNotification(title, message, type, icon) {
+            const toastEl = document.getElementById('actionToast');
+            const toastHeader = document.getElementById('toastHeader');
+            const toastTitle = document.getElementById('toastTitle');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastTitle.innerText = title;
+            toastMessage.innerText = message;
+
+            toastHeader.className = 'toast-header text-white';
+            toastIcon.className = 'bi';
+
+            toastHeader.classList.add('bg-' + type);
+            if (type === 'warning') toastHeader.classList.replace('text-white', 'text-dark');
+            
+            toastIcon.classList.add(icon);
+
+            const toast = new bootstrap.Toast(toastEl);
+            toast.show();
+        }
+
+        // Chuyển đổi qua lại giữa các Tuần
+        function changeWeek(element, weekName, date) {
+            document.querySelectorAll('.week-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            element.classList.add('active');
+            document.getElementById('displayWeekTitle').innerText = `${weekName} (${date})`;
+        }
+
+        // Chức năng bấm đổi màu nút Điểm danh
+        function mark(btnClicked) {
+            let btnGroup = btnClicked.parentElement;
+            btnGroup.querySelectorAll('.btn-att').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            btnClicked.classList.add('active');
+        }
+    </script>
+</body>
+</html>

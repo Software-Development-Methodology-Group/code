@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống QLĐT Toàn diện - FPT Polytechnic</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        :root { --fpt-orange: #f26d21; --fpt-dark: #d15815; }
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x: hidden; }
+        .sidebar { background-color: var(--fpt-orange); min-height: 100vh; color: white; transition: all 0.3s; }
+        .sidebar a { color: white; text-decoration: none; display: block; padding: 12px 15px; margin-bottom: 5px; border-radius: 5px; cursor: pointer; transition: 0.2s; }
+        .sidebar a:hover, .sidebar a.active { background-color: var(--fpt-dark); font-weight: bold; }
+        .card-header-orange { background-color: var(--fpt-orange); color: white; font-weight: bold; }
+        .btn-orange { background-color: var(--fpt-orange); color: white; border: none;}
+        .btn-orange:hover { background-color: var(--fpt-dark); color: white; }
+        .table-matrix th { background-color: #e9ecef; vertical-align: middle; text-align: center; }
+        .table-matrix td { vertical-align: middle; text-align: center; transition: 0.3s; }
+        .cell-action { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .badge-status { font-size: 0.85rem; padding: 0.5em; width: 100%; cursor: pointer; }
+        .view-section { display: none; animation: fadeIn 0.4s ease-in-out; }
+        .view-section.active { display: block; }
+        .subject-tag { display: inline-block; padding: 4px 8px; margin: 2px; background: #e9ecef; border-radius: 4px; font-size: 0.85em; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 1055; }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-2 sidebar p-3 shadow-sm">
+            <h4 class="text-center mb-4 border-bottom pb-3 fw-bold">FPT Poly</h4>
+            <a onclick="switchView('dashboard')" id="nav-dashboard" class="active"><i class="bi bi-grid-3x3-gap-fill me-2"></i> Ma trận Độ phủ</a>
+            <a onclick="switchView('list-ctdt')" id="nav-list-ctdt"><i class="bi bi-journal-bookmark-fill me-2"></i> Quản lý Khung CTĐT</a>
+            <a onclick="switchView('builder')" id="nav-builder"><i class="bi bi-tools me-2"></i> Build Khung CTĐT mới</a>
+            <a id="nav-clone-builder" style="display: none;"><i class="bi bi-files me-2"></i> Nhân bản CTĐT</a>
+        </div>
+<div class="col-md-10 p-4">
+            
+            <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+                <h2 id="page-title" class="fw-bold text-dark mb-0">Dashboard Ma trận</h2>
+                <div class="d-flex align-items-center">
+                    <span class="me-3 fw-bold text-secondary"><i class="bi bi-person-circle"></i> Trưởng Ban Đào Tạo (Hội sở)</span>
+                </div>
+            </div>
+
+            <div id="dashboard" class="view-section active">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold"><i class="bi bi-geo-alt-fill text-danger me-2"></i>Chọn cơ sở để kiểm tra rủi ro:</h5>
+                        <select id="campusFilter" class="form-select w-auto fw-bold text-primary" onchange="renderMatrix()">
+                            <option value="HN">Cơ sở Hà Nội</option>
+                            <option value="HCM">Cơ sở TP.HCM</option>
+                            <option value="CT">Cơ sở Cần Thơ</option>
+                        </select>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-matrix mb-0" id="matrixTable">
+                                </table>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-light text-muted small">
+                        <i class="bi bi-info-circle"></i> Chú giải: 
+                        <span class="badge bg-success mx-1">Xanh: Đã có CTĐT</span> | 
+                        <span class="badge bg-danger mx-1">Đỏ: Thiếu CTĐT (Cảnh báo)</span> | 
+                        <span class="badge bg-secondary mx-1">Xám: Cơ sở không đào tạo khóa/ngành này</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="list-ctdt" class="view-section">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold">Danh sách CTĐT đã ban hành</h5>
+                        <button class="btn btn-orange btn-sm" onclick="switchView('builder')"><i class="bi bi-plus-lg"></i> Tạo CTĐT mới</button>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-hover align-middle mb-0" id="ctdtListTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="15%">Mã CTĐT</th>
+                                    <th width="20%">Ngành & Khóa</th>
+<th width="35%">Nội dung Môn học</th>
+                                    <th width="15%">Phân bổ (Cơ sở)</th>
+                                    <th width="15%" class="text-center">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="builder" class="view-section">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header card-header-orange py-3">
+                        <h5 class="mb-0">Khởi tạo Bản thiết kế CTĐT chuẩn (Làm từ đầu)</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="formCTDT">
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Ngành học (Major) <span class="text-danger">*</span></label>
+                                    <select id="buildMajor" class="form-select" required>
+                                        <option value="">-- Chọn ngành --</option>
+                                        <option value="IT">Công nghệ thông tin</option>
+                                        <option value="GD">Thiết kế Đồ họa</option>
+                                        <option value="MK">Digital Marketing</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Phiên bản Khóa (Cohort) <span class="text-danger">*</span></label>
+                                    <select id="buildCohort" class="form-select" required>
+                                        <option value="">-- Chọn khóa --</option>
+                                        <option value="K18">Khóa K18</option>
+                                        <option value="K19">Khóa K19</option>
+                                        <option value="K20">Khóa K20 (Sắp tới)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Tổng tín chỉ</label>
+                                    <input type="number" class="form-control" value="120">
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info border-0 shadow-sm">
+                                <h6 class="fw-bold"><i class="bi bi-geo-alt-fill"></i> Phân bổ Cơ sở (Mapping)</h6>
+<p class="small mb-2">Tích chọn các cơ sở được phép sử dụng bản thiết kế này để mở lớp.</p>
+                                <div class="d-flex gap-4" id="campusCheckboxes">
+                                    <div class="form-check">
+                                        <input class="form-check-input campus-cb" type="checkbox" value="HN" id="cbHN">
+                                        <label class="form-check-label fw-bold" for="cbHN">Hà Nội</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input campus-cb" type="checkbox" value="HCM" id="cbHCM">
+                                        <label class="form-check-label fw-bold" for="cbHCM">TP. HCM</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input campus-cb" type="checkbox" value="CT" id="cbCT">
+                                        <label class="form-check-label fw-bold" for="cbCT">Cần Thơ</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="text-end mt-4 border-top pt-3">
+                                <button type="button" class="btn btn-secondary me-2" onclick="switchView('list-ctdt')">Hủy bỏ</button>
+                                <button type="button" class="btn btn-orange px-4" onclick="saveCTDT()"><i class="bi bi-save"></i> Lưu & Ban hành CTĐT</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div id="clone-builder" class="view-section">
+                <div class="mb-3 d-flex align-items-center">
+                    <button class="btn btn-sm btn-light me-3 border" onclick="switchView('list-ctdt')"><i class="bi bi-arrow-left"></i> Trở về Danh sách</button>
+                    <h4 class="fw-bold mb-0 text-orange"><i class="bi bi-files"></i> Trình Nhân bản Chương trình (Clone)</h4>
+                </div>
+                
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body bg-light border-bottom">
+                        <div class="row align-items-end">
+                            <div class="col-md-3">
+                                <label class="text-muted small fw-bold">Đang Copy từ Bản gốc:</label>
+                                <input type="text" id="sourceCTDT" class="form-control fw-bold text-primary" readonly disabled>
+                            </div>
+                            <div class="col-md-1 text-center">
+                                <i class="bi bi-arrow-right-circle-fill fs-2 text-success"></i>
+                            </div>
+<div class="col-md-4">
+                                <label class="text-muted small fw-bold">Áp dụng cho Khóa mới: <span class="text-danger">*</span></label>
+                                <select id="targetCloneCohort" class="form-select border-success fw-bold">
+                                    <option value="">-- Chọn khóa chưa có CTĐT --</option>
+                                    <option value="K18">Khóa K18</option>
+                                    <option value="K19">Khóa K19</option>
+                                    <option value="K20">Khóa K20 (Sắp tới)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <button class="btn btn-success px-4 fw-bold shadow-sm" onclick="saveClonedCTDT()"><i class="bi bi-save2"></i> Lưu thành Bản độc lập</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body">
+                        <h5 class="fw-bold mb-3">Tùy chỉnh danh sách môn học cho Khóa mới</h5>
+                        <div class="alert alert-warning py-2 small">
+                            <i class="bi bi-info-circle-fill"></i> Mọi thao tác Xóa/Thêm môn học dưới đây chỉ áp dụng cho Khóa mới. <strong>Bản gốc không bị ảnh hưởng.</strong>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-8">
+                                <select id="newSubjectSelect" class="form-select">
+                                    <option value="">-- Chọn môn học mới cần thêm vào thay thế --</option>
+                                    <option value="PYT101 - Lập trình Python cơ bản">PYT101 - Lập trình Python cơ bản</option>
+                                    <option value="AI102 - Nhập môn Trí tuệ nhân tạo">AI102 - Nhập môn Trí tuệ nhân tạo</option>
+                                    <option value="UIX201 - Thiết kế UI/UX">UIX201 - Thiết kế UI/UX</option>
+                                    <option value="MKT101 - Marketing căn bản">MKT101 - Marketing căn bản</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-outline-primary w-100" onclick="addSubjectToClone()"><i class="bi bi-plus-circle"></i> Thêm môn này</button>
+                            </div>
+                        </div>
+
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="80%">Tên môn học trong CTĐT này</th>
+                                    <th width="20%" class="text-center">Xóa khỏi khung</th>
+</tr>
+                            </thead>
+                            <tbody id="cloneSubjectsTbody">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+    // 1. MASTER DATA (DỮ LIỆU NỀN TẢNG)
+    const majors = [
+        { id: 'IT', name: 'Công nghệ thông tin' },
+        { id: 'GD', name: 'Thiết kế Đồ họa' },
+        { id: 'MK', name: 'Digital Marketing' }
+    ];
+    const cohorts = ['K18', 'K19', 'K20'];
+    const campuses = {
+        'HN': 'Hà Nội',
+        'HCM': 'TP. Hồ Chí Minh',
+        'CT': 'Cần Thơ'
+    };
+
+    const campusPermissions = {
+        'HN': { 'IT': ['K18', 'K19', 'K20'], 'GD': ['K18', 'K19', 'K20'], 'MK': ['K18', 'K19', 'K20'] },
+        'HCM': { 'IT': ['K18', 'K19', 'K20'], 'GD': ['K19', 'K20'], 'MK': ['K19', 'K20'] },
+        'CT': { 'IT': ['K20'], 'GD': ['K20'], 'MK': [] } 
+    };
+
+    // BỔ SUNG: Data Môn học (Subjects) vào CSDL chuẩn để có cái mà Clone
+    let ctdtDatabase = [
+        { majorId: 'IT', cohortId: 'K18', mappedCampuses: ['HN', 'HCM'], subjects: ['COM101 - Tin học cơ sở', 'PRO1014 - Lập trình C cơ bản', 'WEB1013 - Xây dựng trang Web'] },
+        { majorId: 'IT', cohortId: 'K19', mappedCampuses: ['HN', 'HCM'], subjects: ['COM101 - Tin học cơ sở', 'PRO1014 - Lập trình C cơ bản', 'WEB1013 - Xây dựng trang Web'] },
+        { majorId: 'GD', cohortId: 'K18', mappedCampuses: ['HN'], subjects: ['COM101 - Tin học cơ sở', 'GRA101 - Photoshop cơ bản'] }
+    ];
+
+    // Biến tạm để giữ dữ liệu đang Clone
+    let currentCloneData = { majorId: '', subjects: [], mappedCampuses: [] };
+
+    // ==========================================
+    // CÁC HÀM XỬ LÝ GIAO DIỆN VÀ LOGIC
+    // ==========================================
+
+    // SPA Router
+    function switchView(viewId) {
+        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.sidebar a').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(viewId).classList.add('active');
+        
+        // Handle Sidebar Highlighting
+        let navId = viewId === 'clone-builder' ? 'nav-clone-builder' : 'nav-' + viewId;
+        document.getElementById(navId).classList.add('active');
+
+        // Dynamic Titles
+        if (viewId === 'dashboard') {
+            document.getElementById('page-title').innerText = "Dashboard Ma trận Độ phủ";
+            renderMatrix();
+        } else if (viewId === 'list-ctdt') {
+            document.getElementById('page-title').innerText = "Quản lý Khung Chương trình";
+            renderList();
+        } else if (viewId === 'builder') {
+            document.getElementById('page-title').innerText = "Trình dựng Khung CTĐT Mới";
+            document.getElementById('formCTDT').reset();
+} else if (viewId === 'clone-builder') {
+            document.getElementById('page-title').innerText = "Tính năng Sao chép Dữ liệu";
+        }
+    }
+
+    // -- LOGIC DASHBOARD MA TRẬN --
+    function checkCTDTStatus(campusId, majorId, cohortId) {
+        const allowedCohorts = campusPermissions[campusId][majorId] || [];
+        if (!allowedCohorts.includes(cohortId)) return 'N/A';
+        const found = ctdtDatabase.find(ct => ct.majorId === majorId && ct.cohortId === cohortId);
+        if (found && found.mappedCampuses.includes(campusId)) return 'OK';
+        return 'MISSING';
+    }
+
+    function renderMatrix() {
+        const campusId = document.getElementById('campusFilter').value;
+        const table = document.getElementById('matrixTable');
+        
+        let html = `<thead><tr><th width="20%" class="text-start fs-5">Ngành học \\ Khóa</th>`;
+        cohorts.forEach(c => { html += `<th>${c}</th>`; });
+        html += `</tr></thead><tbody>`;
+
+        majors.forEach(major => {
+            html += `<tr><td class="text-start fw-bold">${major.name}</td>`;
+            cohorts.forEach(cohort => {
+                const status = checkCTDTStatus(campusId, major.id, cohort);
+                if (status === 'N/A') {
+                    html += `<td class="bg-light text-muted"><i class="bi bi-dash-circle"></i><br><small>Không áp dụng</small></td>`;
+                } else if (status === 'OK') {
+                    html += `<td><div class="cell-action"><span class="badge bg-success badge-status"><i class="bi bi-check-circle"></i> Đã ban hành</span><small class="text-muted">${major.id}_${cohort}</small></div></td>`;
+                } else {
+                    html += `<td class="table-danger"><div class="cell-action"><span class="badge bg-danger badge-status shadow-sm"><i class="bi bi-exclamation-triangle-fill"></i> Lỗ hổng</span><button class="btn btn-sm btn-outline-danger mt-1" onclick="autoFillBuilder('${major.id}', '${cohort}', '${campusId}')">Tạo ngay</button></div></td>`;
+                }
+            });
+            html += `</tr>`;
+        });
+        html += `</tbody>`;
+        table.innerHTML = html;
+    }
+
+    // -- LOGIC DANH SÁCH CTĐT & NÚT NHÂN BẢN --
+    function renderList() {
+        const tbody = document.querySelector('#ctdtListTable tbody');
+        let html = '';
+        ctdtDatabase.forEach(ct => {
+            const majorName = majors.find(m => m.id === ct.majorId).name;
+            const mappedNames = ct.mappedCampuses.map(c => `<span class="badge bg-secondary me-1">${campuses[c]}</span>`).join('');
+            const subsHtml = (ct.subjects || []).map(s => `<span class="subject-tag">${s.split(' - ')[0]}</span>`).join('');
+
+            html += `
+                <tr>
+                    <td class="fw-bold text-primary">${ct.majorId}_${ct.cohortId}</td>
+<td><span class="d-block fw-bold">${majorName}</span><span class="text-muted small">Khóa: ${ct.cohortId}</span></td>
+                    <td>${subsHtml || '<i class="text-muted small">Chưa có môn học</i>'}</td>
+                    <td>${mappedNames}</td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-outline-primary" title="Sửa môn học"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm btn-orange ms-1" title="Nhân bản (Clone)" onclick="initClone('${ct.majorId}', '${ct.cohortId}')">
+                            <i class="bi bi-copy"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = html;
+    }
+
+    // -- LOGIC TẠO MỚI (LÀM TỪ ĐẦU) --
+    function saveCTDT() {
+        const major = document.getElementById('buildMajor').value;
+        const cohort = document.getElementById('buildCohort').value;
+        const checkedCampuses = Array.from(document.querySelectorAll('.campus-cb:checked')).map(cb => cb.value);
+
+        if (!major || !cohort || checkedCampuses.length === 0) {
+            showToast("Lỗi!", "Vui lòng chọn đủ Ngành, Khóa và ít nhất 1 Cơ sở áp dụng.", "danger"); return;
+        }
+
+        const existingIndex = ctdtDatabase.findIndex(ct => ct.majorId === major && ct.cohortId === cohort);
+        if (existingIndex > -1) {
+            ctdtDatabase[existingIndex].mappedCampuses = checkedCampuses;
+            showToast("Thành công!", `Đã cập nhật phân bổ cho CTĐT ${major}_${cohort}`, "success");
+        } else {
+            // Thêm mới với mảng subjects trống
+            ctdtDatabase.push({ majorId: major, cohortId: cohort, mappedCampuses: checkedCampuses, subjects: [] });
+            showToast("Thành công!", `Đã tạo mới Bản thiết kế ${major}_${cohort}`, "success");
+        }
+        setTimeout(() => switchView('dashboard'), 1500);
+    }
+
+    function autoFillBuilder(majorId, cohortId, campusId) {
+        switchView('builder');
+        document.getElementById('buildMajor').value = majorId;
+        document.getElementById('buildCohort').value = cohortId;
+        document.getElementById('cb' + campusId).checked = true;
+        showToast("Gợi ý", "Đã điền sẵn thông tin bị khuyết. Hãy lưu lại.", "info");
+    }
+
+    // ==========================================
+    // LOGIC NHÂN BẢN (CLONE)
+    // ==========================================
+    function initClone(majorId, cohortId) {
+        // 1. Tìm bản gốc
+        const baseCTDT = ctdtDatabase.find(ct => ct.majorId === majorId && ct.cohortId === cohortId);
+        
+        // 2. Copy dữ liệu (Deep Copy)
+        currentCloneData = {
+            majorId: baseCTDT.majorId,
+            subjects: [...(baseCTDT.subjects || [])], 
+            mappedCampuses: [...baseCTDT.mappedCampuses] // Giữ nguyên phân bổ cơ sở cũ
+        };
+// 3. Đưa lên UI
+        const majorName = majors.find(m => m.id === majorId).name;
+        document.getElementById('sourceCTDT').value = `${majorName} - ${cohortId}`;
+        document.getElementById('targetCloneCohort').value = '';
+        
+        renderCloneSubjects();
+        switchView('clone-builder');
+    }
+
+    function renderCloneSubjects() {
+        const tbody = document.getElementById('cloneSubjectsTbody');
+        tbody.innerHTML = '';
+        if(currentCloneData.subjects.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="2" class="text-center text-danger">Chương trình hiện tại đang trống!</td></tr>`; return;
+        }
+        currentCloneData.subjects.forEach((sub, index) => {
+            tbody.innerHTML += `
+                <tr>
+                    <td class="fw-bold">${sub}</td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-outline-danger" onclick="removeSubject(${index})"><i class="bi bi-trash"></i> Xóa bỏ</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function removeSubject(index) {
+        currentCloneData.subjects.splice(index, 1);
+        renderCloneSubjects();
+    }
+
+    function addSubjectToClone() {
+        const select = document.getElementById('newSubjectSelect');
+        const newSub = select.value;
+        if (!newSub) { showToast("Lỗi", "Hãy chọn một môn học!", "warning"); return; }
+        if (currentCloneData.subjects.includes(newSub)) { showToast("Lỗi", "Môn này đã có rồi!", "warning"); return; }
+        
+        currentCloneData.subjects.push(newSub);
+        select.value = ''; 
+        renderCloneSubjects();
+    }
+
+    function saveClonedCTDT() {
+        const cohort = document.getElementById('targetCloneCohort').value;
+        if (!cohort) { showToast("Lỗi", "Bạn phải chọn Khóa mới cho bản sao này!", "danger"); return; }
+
+        // Kiểm tra xem Bản sao này đã bị trùng ID trong DB chưa
+        const isExist = ctdtDatabase.some(ct => ct.majorId === currentCloneData.majorId && ct.cohortId === cohort);
+        if(isExist) {
+            showToast("Trùng lặp!", `Chương trình ${currentCloneData.majorId}_${cohort} đã tồn tại! Vui lòng xóa bản cũ trước khi clone đè lên.`, "danger");
+            return;
+        }
+
+        // Đẩy bản sao vào Database như một thực thể độc lập
+        ctdtDatabase.push({
+            majorId: currentCloneData.majorId,
+            cohortId: cohort,
+            mappedCampuses: [...currentCloneData.mappedCampuses],
+            subjects: [...currentCloneData.subjects]
+        });
+
+        showToast("Clone Thành công!", `Đã khởi tạo độc lập chương trình ${currentCloneData.majorId}_${cohort}`, "success");
+        setTimeout(() => switchView('list-ctdt'), 1500);
+    }
+
+    // Tiện ích Toast
+    function showToast(title, message, type) {
+        const toastHTML = `
+<div class="toast show align-items-center text-white bg-${type} border-0 mb-2" role="alert" style="animation: fadeIn 0.3s;">
+                <div class="d-flex">
+                    <div class="toast-body"><strong>${title}</strong> ${message}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.parentElement.parentElement.remove()"></button>
+                </div>
+            </div>`;
+        document.getElementById('toast-container').insertAdjacentHTML('beforeend', toastHTML);
+        setTimeout(() => { const toasts = document.querySelectorAll('.toast'); if(toasts.length) toasts[0].remove(); }, 3000);
+    }
+
+    window.onload = () => renderMatrix();
+
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

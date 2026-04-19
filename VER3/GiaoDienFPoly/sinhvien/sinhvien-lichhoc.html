@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sinh viên - Lịch học & Lịch thi</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="/images/logo.png">
+    <style>
+        :root {
+            --bg-light: #f4f6f9;
+            --text-main: #333;
+            --student-theme: #f36f21;
+            /* Màu Cam FPT */
+            --student-light: #fff5ec;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            font-size: 14px;
+            color: var(--text-main);
+        }
+
+        /* --- SIDEBAR CHÍNH --- */
+        .main-sidebar {
+            width: 80px;
+            background: #fff;
+            border-right: 1px solid #dee2e6;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            padding-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .sidebar-icon {
+            width: 45px;
+            height: 45px;
+            background: #f8f9fa;
+            color: #666;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-icon:hover,
+        .sidebar-icon.active {
+            background: var(--student-theme);
+            color: #fff;
+            box-shadow: 0 4px 8px rgba(243, 111, 33, 0.4);
+        }
+
+        .sidebar-text {
+            font-size: 11px;
+            margin-bottom: 20px;
+            color: #666;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        /* --- MENU PHỤ --- */
+        .sub-sidebar {
+            width: 250px;
+            background: #fff;
+            height: 100vh;
+            position: fixed;
+            left: 80px;
+            top: 0;
+            border-right: 1px solid #dee2e6;
+            overflow-y: auto;
+            padding-top: 20px;
+        }
+
+        .student-profile {
+            padding: 10px 20px 20px 20px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .avatar-circle {
+            width: 70px;
+            height: 70px;
+            background-color: var(--student-light);
+            color: var(--student-theme);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            font-weight: bold;
+            margin: 0 auto 10px auto;
+            border: 2px solid var(--student-theme);
+        }
+
+        .sub-menu-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            font-size: 14px;
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 500;
+            border-left: 4px solid transparent;
+            transition: 0.2s ease;
+        }
+
+        .sub-menu-item i {
+            font-size: 1.2rem;
+            margin-right: 15px;
+            color: #555;
+            width: 25px;
+            text-align: center;
+        }
+
+        .sub-menu-item:hover,
+        .sub-menu-item.active {
+            background: var(--student-light);
+            color: var(--student-theme);
+        }
+
+        .sub-menu-item:hover i,
+        .sub-menu-item.active i {
+            color: var(--student-theme);
+        }
+
+        .sub-menu-item.active {
+            font-weight: bold;
+            border-left: 4px solid var(--student-theme);
+        }
+
+        /* --- NỘI DUNG CHÍNH --- */
+        .main-content {
+            margin-left: 330px;
+            padding: 30px 40px;
+            max-width: 1400px;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* --- TAB NAVIGATION --- */
+        .nav-tabs-custom {
+            border-bottom: 2px solid #dee2e6;
+            margin-bottom: 20px;
+        }
+
+        .nav-tabs-custom .nav-link {
+            color: #555;
+            font-weight: 600;
+            border: none;
+            padding: 12px 25px;
+            font-size: 15px;
+            position: relative;
+            background: transparent;
+        }
+
+        .nav-tabs-custom .nav-link.active {
+            color: var(--student-theme);
+        }
+
+        .nav-tabs-custom .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--student-theme);
+            border-radius: 3px 3px 0 0;
+        }
+
+        .nav-tabs-custom .nav-link:hover:not(.active) {
+            color: var(--student-theme);
+        }
+
+        /* --- BẢNG LỊCH HỌC --- */
+        .schedule-wrapper {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+            border: 1px solid #dee2e6;
+            padding: 20px;
+        }
+
+        .schedule-table {
+            border-collapse: separate;
+            border-spacing: 0;
+            width: 100%;
+            min-width: 900px;
+        }
+
+        .schedule-table th {
+            background-color: #f8f9fa;
+            color: #444;
+            font-weight: 700;
+            text-align: center;
+            padding: 15px 10px;
+            border: 1px solid #dee2e6;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .schedule-table td {
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            vertical-align: top;
+            height: 120px;
+            width: 14%;
+        }
+
+        .schedule-table .time-col {
+            width: 100px;
+            background-color: #fcfcfc;
+            text-align: center;
+            vertical-align: middle;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .slot-time {
+            font-size: 12px;
+            color: #888;
+            font-weight: normal;
+            display: block;
+            margin-top: 4px;
+        }
+
+        /* Ô Môn học */
+        .class-block {
+            background-color: var(--student-light);
+            border-left: 4px solid var(--student-theme);
+            border-radius: 6px;
+            padding: 10px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: 0.2s;
+            cursor: pointer;
+        }
+
+        .class-block:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(243, 111, 33, 0.15);
+        }
+
+        .class-code {
+            font-weight: bold;
+            color: var(--student-theme);
+            font-size: 13.5px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .class-name {
+            font-size: 13px;
+            color: #333;
+            font-weight: 600;
+            line-height: 1.3;
+            margin-bottom: 8px;
+        }
+
+        .class-info {
+            font-size: 12px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            margin-bottom: 3px;
+        }
+
+        .class-info i {
+            margin-right: 5px;
+            color: #888;
+        }
+
+        .class-online {
+            border-left-color: #0d6efd;
+            background-color: #f0f7ff;
+        }
+
+        .class-online .class-code {
+            color: #0d6efd;
+        }
+
+        /* Trạng thái điểm danh */
+        .att-status {
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            font-weight: bold;
+            margin-top: auto;
+            align-self: flex-start;
+        }
+
+        .att-present {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .att-absent {
+            background: #f8d7da;
+            color: #842029;
+        }
+
+        .att-future {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        /* --- BẢNG LỊCH THI --- */
+        .exam-table th {
+            background-color: var(--student-light);
+            color: var(--student-theme);
+            text-transform: uppercase;
+            font-size: 13px;
+            border-bottom: 2px solid #f36f21 !important;
+            padding: 15px;
+        }
+
+        .exam-table td {
+            padding: 15px;
+            vertical-align: middle;
+            border-bottom: 1px solid #eee;
+            font-size: 14.5px;
+        }
+
+        .exam-badge {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 12.5px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="main-sidebar">
+        <div class="d-flex flex-column align-items-center">
+            <a href="sinhvien-dashboard.html"
+                class="text-decoration-none text-dark d-flex flex-column align-items-center">
+                <div class="sidebar-icon active"><i class="bi bi-mortarboard-fill"></i></div>
+                <div class="sidebar-text" style="color: var(--student-theme);">Học tập</div>
+            </a>
+        </div>
+        <div class="d-flex flex-column align-items-center">
+            <a href="#" class="text-decoration-none text-dark d-flex flex-column align-items-center">
+                <div class="sidebar-icon"><i class="bi bi-wallet2"></i></div>
+                <div class="sidebar-text">Tài chính</div>
+            </a>
+        </div>
+        <div class="d-flex flex-column align-items-center">
+            <a href="sinhvien-hotro.html" class="text-decoration-none text-dark d-flex flex-column align-items-center">
+                <div class="sidebar-icon"><i class="bi bi-chat-dots"></i></div>
+                <div class="sidebar-text">Hỗ trợ</div>
+            </a>
+        </div>
+        <div class="d-flex flex-column align-items-center mt-auto mb-3">
+            <a href="../dangnhap/dangnhap.html"
+                class="text-decoration-none text-dark d-flex flex-column align-items-center">
+                <div class="sidebar-icon"><i class="bi bi-box-arrow-right"></i></div>
+                <div class="sidebar-text" onclick="xulyDangxuat()">Đăng xuất</div>
+            </a>
+        </div>
+    </div>
+     <div class="sub-sidebar">
+    <div class="student-profile">
+        <div class="avatar-circle">A</div>
+        <h6 class="fw-bold mb-1 text-dark">Nguyễn Văn An</h6>
+        <span class="badge bg-light text-dark border font-monospace">HE150123</span>
+        <div class="mt-2 text-muted" style="font-size: 12px;">Ngành: Kỹ thuật phần mềm</div>
+    </div>
+    <a href="sinhvien-dashboard.html" class="sub-menu-item"><i class="bi bi-house-door"></i> Tổng quan</a>
+    <a href="sinhvien-lichhoc.html" class="sub-menu-item"><i class="bi bi-calendar-week"></i> Lịch học & Lịch thi</a>
+    <a href="sinhvien-ketqua.html" class="sub-menu-item"><i class="bi bi-journal-check"></i> Kết quả học tập</a>
+    <a href="sinhvien-dangky.html" class="sub-menu-item"><i class="bi bi-ui-checks-grid"></i> Đăng ký tín chỉ</a>
+    <a href="sinhvien-diemdanh.html" class="sub-menu-item active"><i class="bi bi-person-check"></i> Báo cáo Điểm
+        danh</a>
+    </div>
+
+    <div class="main-content">
+
+        <div class="d-flex justify-content-between align-items-end mb-4">
+            <div>
+                <h3 class="fw-bold mb-1 text-dark">Lịch học & Lịch thi</h3>
+                <p class="text-muted mb-0">Theo dõi thời khóa biểu và lịch thi học kỳ hiện tại.</p>
+            </div>
+
+            <div class="d-flex gap-2">
+                <select class="form-select border-secondary fw-medium" style="width: 200px;">
+                    <option selected>Học kỳ 1 (2025-2026)</option>
+                    <option>Học kỳ 2 (2024-2025)</option>
+                </select>
+                <button class="btn btn-outline-secondary fw-bold"
+                    onclick="alert('Tính năng tải lịch về Google Calendar đang phát triển.')"><i
+                        class="bi bi-calendar-plus me-1"></i> Đồng bộ Lịch</button>
+            </div>
+        </div>
+
+        <ul class="nav nav-tabs nav-tabs-custom" id="scheduleTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="class-tab" data-bs-toggle="tab" data-bs-target="#class-schedule"
+                    type="button" role="tab">
+                    <i class="bi bi-calendar-grid-3x3 me-1"></i> Lịch học hàng tuần
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="exam-tab" data-bs-toggle="tab" data-bs-target="#exam-schedule"
+                    type="button" role="tab">
+                    <i class="bi bi-pencil-square me-1"></i> Lịch thi dự kiến
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="scheduleTabsContent">
+
+            <div class="tab-pane fade show active" id="class-schedule" role="tabpanel">
+
+                <div class="schedule-wrapper">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <button class="btn btn-light border fw-bold"><i class="bi bi-chevron-left me-1"></i> Tuần
+                            trước</button>
+                        <h5 class="fw-bold mb-0 text-dark text-center">
+                            Tuần 05: Từ 16/03/2026 - Đến 22/03/2026
+                        </h5>
+                        <button class="btn btn-light border fw-bold">Tuần sau <i
+                                class="bi bi-chevron-right ms-1"></i></button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="schedule-table">
+                            <thead>
+                                <tr>
+                                    <th class="time-col">Ca học</th>
+                                    <th>Thứ 2 <br><span class="fw-normal text-muted fs-6">16/03</span></th>
+                                    <th>Thứ 3 <br><span class="fw-normal text-muted fs-6">17/03</span></th>
+                                    <th>Thứ 4 <br><span class="fw-normal text-muted fs-6">18/03</span></th>
+                                    <th>Thứ 5 <br><span class="fw-normal text-muted fs-6">19/03</span></th>
+                                    <th>Thứ 6 <br><span class="fw-normal text-muted fs-6">20/03</span></th>
+                                    <th>Thứ 7 <br><span class="fw-normal text-muted fs-6">21/03</span></th>
+                                    <th>Chủ nhật <br><span class="fw-normal text-muted fs-6">22/03</span></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="time-col">Ca 1 <span class="slot-time">07:15 - 09:15</span></td>
+                                    <td>
+                                        <div class="class-block">
+                                            <div>
+                                                <span class="class-code">IT101_01</span>
+                                                <div class="class-name">Nhập môn Lập trình C</div>
+                                                <div class="class-info"><i class="bi bi-geo-alt-fill text-danger"></i>
+                                                    P.202 Tòa T</div>
+                                                <div class="class-info"><i class="bi bi-person-fill"></i> TS. Nguyễn
+                                                    Trọng Tài</div>
+                                            </div>
+                                            <span class="att-status att-present">Có mặt</span>
+                                        </div>
+                                    </td>
+                                    <td></td>
+                                    <td>
+                                        <div class="class-block">
+                                            <div>
+                                                <span class="class-code">IT101_01</span>
+                                                <div class="class-name">Nhập môn Lập trình C</div>
+                                                <div class="class-info"><i class="bi bi-geo-alt-fill text-danger"></i>
+                                                    P.202 Tòa T</div>
+                                                <div class="class-info"><i class="bi bi-person-fill"></i> TS. Nguyễn
+                                                    Trọng Tài</div>
+                                            </div>
+                                            <span class="att-status att-future">Chưa diễn ra</span>
+                                        </div>
+                                    </td>
+                                    <td></td>
+                                    <td>
+                                        <div class="class-block">
+                                            <div>
+                                                <span class="class-code">IT101_01</span>
+                                                <div class="class-name">Nhập môn Lập trình C</div>
+                                                <div class="class-info"><i class="bi bi-geo-alt-fill text-danger"></i>
+                                                    P.202 Tòa T</div>
+                                                <div class="class-info"><i class="bi bi-person-fill"></i> TS. Nguyễn
+                                                    Trọng Tài</div>
+                                            </div>
+                                            <span class="att-status att-future">Chưa diễn ra</span>
+                                        </div>
+                                    </td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+
+                                <tr>
+                                    <td class="time-col">Ca 2 <span class="slot-time">09:25 - 11:25</span></td>
+                                    <td></td>
+                                    <td>
+                                        <div class="class-block class-online">
+                                            <div>
+                                                <span class="class-code">ENG201_05</span>
+                                                <div class="class-name">Tiếng Anh IT (Blended)</div>
+                                                <div class="class-info"><i
+                                                        class="bi bi-camera-video-fill text-primary"></i> Google Meet
+                                                </div>
+                                                <div class="class-info"><i class="bi bi-person-fill"></i> ThS. Trần Thị
+                                                    Mai</div>
+                                            </div>
+                                            <span class="att-status att-absent">Vắng mặt</span>
+                                        </div>
+                                    </td>
+                                    <td></td>
+                                    <td>
+                                        <div class="class-block class-online">
+                                            <div>
+                                                <span class="class-code">ENG201_05</span>
+                                                <div class="class-name">Tiếng Anh IT (Blended)</div>
+                                                <div class="class-info"><i
+                                                        class="bi bi-camera-video-fill text-primary"></i> Google Meet
+                                                </div>
+                                                <div class="class-info"><i class="bi bi-person-fill"></i> ThS. Trần Thị
+                                                    Mai</div>
+                                            </div>
+                                            <span class="att-status att-future">Chưa diễn ra</span>
+                                        </div>
+                                    </td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+
+                                <tr>
+                                    <td class="time-col">Ca 3 <span class="slot-time">12:00 - 14:00</span></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td>
+                                        <div class="class-block"
+                                            style="border-left-color: #20c997; background-color: #f0fdf4;">
+                                            <div>
+                                                <span class="class-code" style="color: #20c997;">KTPM01_02</span>
+                                                <div class="class-name">Kiểm thử phần mềm</div>
+                                                <div class="class-info"><i class="bi bi-geo-alt-fill text-danger"></i>
+                                                    Lab 405 (Thực hành)</div>
+                                                <div class="class-info"><i class="bi bi-person-fill"></i> ThS. Lê Hoàng
+                                                    Tuấn</div>
+                                            </div>
+                                            <span class="att-status att-future">Chưa diễn ra</span>
+                                        </div>
+                                    </td>
+                                    <td></td>
+                                    <td></td>
+                                    <td>
+                                        <div class="class-block"
+                                            style="border-left-color: #20c997; background-color: #f0fdf4;">
+                                            <div>
+                                                <span class="class-code" style="color: #20c997;">KTPM01_02</span>
+                                                <div class="class-name">Kiểm thử phần mềm</div>
+                                                <div class="class-info"><i class="bi bi-geo-alt-fill text-danger"></i>
+                                                    Lab 405 (Thực hành)</div>
+                                                <div class="class-info"><i class="bi bi-person-fill"></i> ThS. Lê Hoàng
+                                                    Tuấn</div>
+                                            </div>
+                                            <span class="att-status att-future">Chưa diễn ra</span>
+                                        </div>
+                                    </td>
+                                    <td></td>
+                                </tr>
+
+                                <tr>
+                                    <td class="time-col">Ca 4 <span class="slot-time">14:10 - 16:10</span></td>
+                                    <td colspan="7" class="text-center text-muted align-middle"
+                                        style="background: #fafafa; height: 50px;">Không có lịch học</td>
+                                </tr>
+                                <tr>
+                                    <td class="time-col">Ca 5 <span class="slot-time">16:20 - 18:20</span></td>
+                                    <td colspan="7" class="text-center text-muted align-middle"
+                                        style="background: #fafafa; height: 50px;">Không có lịch học</td>
+                                </tr>
+                                <tr>
+                                    <td class="time-col">Ca 6 <span class="slot-time">18:30 - 20:30</span></td>
+                                    <td colspan="7" class="text-center text-muted align-middle"
+                                        style="background: #fafafa; height: 50px;">Không có lịch học</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-3 d-flex gap-4" style="font-size: 13px;">
+                        <span class="text-muted"><i class="bi bi-square-fill" style="color: var(--student-theme);"></i>
+                            Lý thuyết offline</span>
+                        <span class="text-muted"><i class="bi bi-square-fill text-primary"></i> Học Online</span>
+                        <span class="text-muted"><i class="bi bi-square-fill text-success"></i> Học Thực hành
+                            (Lab)</span>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="exam-schedule" role="tabpanel">
+                <div class="schedule-wrapper">
+                    <div class="alert alert-info border-info bg-opacity-10" style="font-size: 14.5px;">
+                        <i class="bi bi-info-circle-fill me-2"></i> <strong>Lưu ý:</strong> Sinh viên cần có mặt tại
+                        phòng thi trước 15 phút. Nhớ mang theo Thẻ sinh viên hoặc CCCD để giám thị đối chiếu.
+                    </div>
+
+                    <div class="table-responsive mt-3">
+                        <table class="table table-hover exam-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-center" style="width: 50px;">STT</th>
+                                    <th>Môn thi</th>
+                                    <th>Lớp HP</th>
+                                    <th class="text-center">Ngày thi</th>
+                                    <th class="text-center">Ca thi</th>
+                                    <th class="text-center">Phòng thi</th>
+                                    <th class="text-center">Hình thức</th>
+                                    <th>Ghi chú</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="text-center fw-bold text-muted">1</td>
+                                    <td class="fw-bold text-dark">Nhập môn Lập trình C</td>
+                                    <td class="font-monospace">IT101_01</td>
+                                    <td class="text-center fw-bold text-danger">05/05/2026</td>
+                                    <td class="text-center">Ca 2 <br><span class="text-muted"
+                                            style="font-size: 12px;">(09:30 - 11:00)</span></td>
+                                    <td class="text-center fw-bold">Lab 402</td>
+                                    <td class="text-center"><span
+                                            class="badge exam-badge bg-success bg-opacity-10 text-success border border-success">Thực
+                                            hành trên máy</span></td>
+                                    <td class="text-muted" style="font-size: 13px;">Không dùng tài liệu</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center fw-bold text-muted">2</td>
+                                    <td class="fw-bold text-dark">Tiếng Anh IT</td>
+                                    <td class="font-monospace">ENG201_05</td>
+                                    <td class="text-center fw-bold text-danger">08/05/2026</td>
+                                    <td class="text-center">Ca 1 <br><span class="text-muted"
+                                            style="font-size: 12px;">(07:30 - 09:00)</span></td>
+                                    <td class="text-center fw-bold">P.305 Tòa T</td>
+                                    <td class="text-center"><span
+                                            class="badge exam-badge bg-primary bg-opacity-10 text-primary border border-primary">Thi
+                                            trắc nghiệm (EOS)</span></td>
+                                    <td class="text-muted" style="font-size: 13px;">Thi trên hệ thống EOS</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center fw-bold text-muted">3</td>
+                                    <td class="fw-bold text-dark">Kiểm thử phần mềm</td>
+                                    <td class="font-monospace">KTPM01_02</td>
+                                    <td class="text-center fw-bold text-danger">12/05/2026</td>
+                                    <td class="text-center">Ca 4 <br><span class="text-muted"
+                                            style="font-size: 12px;">(14:30 - 16:00)</span></td>
+                                    <td class="text-center fw-bold">P.102 Hội trường</td>
+                                    <td class="text-center"><span
+                                            class="badge exam-badge bg-warning bg-opacity-10 text-dark border border-warning">Bảo
+                                            vệ Đồ án/Dự án</span></td>
+                                    <td class="text-muted" style="font-size: 13px;">Mặc áo cam FPT, nộp slide trước 1
+                                        ngày</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // 1. Tự động nhận diện trang hiện tại và bôi màu cam cho menu
+            let currentFileName = window.location.pathname.split('/').pop();
+
+            // Nếu không có tên file (trang gốc) thì mặc định là dashboard
+            if (currentFileName === '' || currentFileName === '/') {
+                currentFileName = 'sinhvien-dashboard.html';
+            }
+
+            let menuItems = document.querySelectorAll('.sub-menu-item');
+            menuItems.forEach(link => {
+                // Xóa class active ở tất cả các dòng
+                link.classList.remove('active');
+
+                // Nếu href của link trùng với tên file hiện tại thì thêm class active
+                let linkHref = link.getAttribute('href');
+                if (linkHref === currentFileName) {
+                    link.classList.add('active');
+                }
+            });
+
+            // 2. Hiệu ứng chuyển trang mượt mà (Fade-out)
+            menuItems.forEach(link => {
+                link.addEventListener('click', function (e) {
+                    let targetUrl = this.getAttribute('href');
+
+                    // Chỉ chạy hiệu ứng nếu link hợp lệ và không phải trang hiện tại
+                    if (targetUrl !== '#' && targetUrl !== '' && targetUrl !== currentFileName) {
+                        e.preventDefault();
+                        let content = document.querySelector('.main-content');
+                        content.style.transition = 'all 0.3s ease';
+                        content.style.opacity = '0';
+                        content.style.transform = 'translateY(10px)';
+
+                        setTimeout(() => {
+                            window.location.href = targetUrl;
+                        }, 300);
+                    }
+                });
+            });
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

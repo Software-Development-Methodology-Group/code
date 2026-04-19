@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống - Quản lý ĐKTC & Rà soát</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+  
+    <style>
+        :root { 
+            --bg-light: #f4f6f9; 
+            --text-main: #333;
+            --admin-theme: #10b981; 
+        }
+        body { background-color: var(--bg-light); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; overflow-x: hidden; font-size: 13.5px; color: var(--text-main); }
+
+        /* --- SIDEBAR --- */
+        .main-sidebar { width: 80px; background: #fff; border-right: 1px solid #dee2e6; height: 100vh; position: fixed; left: 0; top: 0; z-index: 1000; padding-top: 20px; display: flex; flex-direction: column; align-items: center; box-shadow: 2px 0 5px rgba(0,0,0,0.03); }
+        .sidebar-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; margin-bottom: 20px; cursor: pointer; width: 100%; transition: 0.2s;}
+        .sidebar-icon { width: 45px; height: 45px; background: #f8f9fa; color: #666; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; transition: 0.3s; margin-bottom: 5px; }
+        .sidebar-text { font-size: 11px; color: #555; font-weight: 600; text-align: center; transition: 0.3s; }
+        .sidebar-item:hover .sidebar-icon { background: #e9ecef; }
+        .sidebar-item.active .sidebar-icon { background: var(--admin-theme); color: #fff; box-shadow: 0 6px 12px rgba(16, 185, 129, 0.3); }
+        .sidebar-item.active .sidebar-text { color: var(--admin-theme); }
+
+
+        /* --- MAIN CONTENT --- */
+        .main-content { margin-left: 100px; padding: 25px 30px; animation: fadeIn 0.4s ease;}
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- HIỆU ỨNG LIVE (PULSE) --- */
+        .status-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px; border-radius: 30px; font-weight: bold; font-size: 13px; transition: 0.3s;}
+        .status-open { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0;}
+        .status-closed { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5;}
+        .pulse-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .pulse-green { background-color: #16a34a; box-shadow: 0 0 0 0 rgba(22, 163, 74, 1); animation: pulse-g 1.5s infinite; }
+        @keyframes pulse-g { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(22, 163, 74, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); } }
+
+        /* --- STATS CARDS --- */
+        .stat-card { background: #fff; border-radius: 12px; padding: 15px 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); border: 1px solid #dee2e6; display: flex; align-items: center; transition: 0.3s; cursor: pointer; position: relative;}
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
+        .stat-card.active-filter::after { content: ''; position: absolute; bottom: -1px; left: 10%; width: 80%; height: 4px; background: var(--admin-theme); border-radius: 4px 4px 0 0; }
+        .stat-icon { width: 50px; height: 50px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-right: 15px; }
+
+        /* --- BẢNG --- */
+        .table-container { background: #fff; border-radius: 12px; border: 1px solid #dee2e6; box-shadow: 0 4px 15px rgba(0,0,0,0.02); overflow: hidden; margin-top: 20px;}
+        .nav-tabs-custom { border-bottom: 2px solid #e9ecef; padding: 0 20px; background: #fdfcff;}
+        .nav-tabs-custom .nav-link { border: none; color: #6c757d; font-weight: 600; padding: 15px 20px; font-size: 14px; position: relative; }
+        .nav-tabs-custom .nav-link.active { color: var(--admin-theme); background: transparent; }
+        .nav-tabs-custom .nav-link.active::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 100%; height: 3px; background: var(--admin-theme); border-radius: 3px 3px 0 0; }
+        .nav-tabs-custom .nav-link.tab-danger.active { color: #dc3545; }
+        .nav-tabs-custom .nav-link.tab-danger.active::after { background: #dc3545; }
+
+        .config-table { margin-bottom: 0; }
+        .config-table th { background: #f8f9fa; font-weight: 700; color: #495057; border-bottom: 2px solid #dee2e6; padding: 15px 12px; white-space: nowrap; font-size: 13px;}
+        .config-table td { padding: 15px 12px; vertical-align: middle; border-bottom: 1px solid #f0f0f0; transition: 0.3s;}
+        
+        .class-badge { background: #212529; color: #fff; padding: 4px 8px; border-radius: 6px; font-family: monospace; font-size: 12px; margin-right: 8px;}
+        .enroll-progress { height: 8px; border-radius: 8px; background-color: #e9ecef; margin-top: 8px; margin-bottom: 4px;}
+        .progress-bar-safe { background-color: #10b981; }
+        .progress-bar-danger { background-color: #dc3545; }
+        
+        .ai-box { padding: 8px 12px; border-radius: 8px; font-size: 12.5px; border: 1px dashed; display: inline-block; width: 100%;}
+        .ai-suggest-merge { background: #eff6ff; border-color: #93c5fd; color: #1e3a8a;}
+        .ai-suggest-cancel { background: #fef2f2; border-color: #fca5a5; color: #991b1b;}
+        
+        #lockedReviewState { padding: 60px 20px; text-align: center; background: #fafafa; border-bottom: 1px solid #eee; }
+        .lock-icon-bg { width: 80px; height: 80px; background: #e9ecef; color: #adb5bd; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 35px; margin: 0 auto 20px auto; }
+        
+        .custom-list-box { max-height: 150px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 6px; padding: 10px; background: #fdfdfd; }
+
+        /* --- TOAST NOTIFICATION (CSS MỚI ĐỒNG BỘ ẢNH 3) --- */
+        #custom-toast-container {
+            position: fixed;
+            top: 25px;
+            right: 25px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .sys-toast {
+            background-color: #15803d; /* Màu xanh lá chuẩn xịn */
+            color: #ffffff;
+            padding: 14px 20px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            transform: translateX(120%);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            min-width: 320px;
+            max-width: 450px;
+        }
+        .sys-toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        .sys-toast.toast-error {
+            background-color: #dc3545; /* Đỏ nếu có lỗi */
+        }
+        .sys-toast .toast-icon {
+            font-size: 20px;
+        }
+        .sys-toast .toast-close {
+            margin-left: auto;
+            cursor: pointer;
+            font-size: 22px;
+            opacity: 0.7;
+            line-height: 1;
+        }
+        .sys-toast .toast-close:hover {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    
+    <div id="custom-toast-container"></div>
+
+    <div class="main-sidebar">
+        <a href="lichgiangday.html" class="sidebar-item"><div class="sidebar-icon"><i class="bi bi-person-video3"></i></div><div class="sidebar-text">Giảng viên</div></a>
+        <a href="khaothi-dashboard.html" class="sidebar-item"><div class="sidebar-icon"><i class="bi bi-clipboard-check"></i></div><div class="sidebar-text">Khảo thí</div></a>
+        <a href="hoidong-pheduyet.html" class="sidebar-item"><div class="sidebar-icon"><i class="bi bi-people-fill"></i></div><div class="sidebar-text">Hội đồng</div></a>
+        <a href="hethong-dashboard.html" class="sidebar-item active"><div class="sidebar-icon"><i class="bi bi-gear-fill"></i></div><div class="sidebar-text">Hệ thống</div></a>
+    </div>
+
+    <div class="main-content">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <div id="portalStatusBadge" class="status-badge status-open mb-2 shadow-sm">
+                    <div class="pulse-dot pulse-green" id="pulseDot"></div> 
+                    <span id="portalStatusText">CỔNG ĐĂNG KÝ ĐANG MỞ (LIVE)</span>
+                </div>
+                <h3 class="fw-bold mb-1">Quản lý Đợt Đăng ký & Rà soát Lớp</h3>
+                <p class="text-muted mb-0">Theo dõi số lượng sinh viên đăng ký của từng lớp và xử lý các lớp thiếu sĩ số.</p>
+            </div>
+            <div id="headerActionArea">
+                <button class="btn btn-danger fw-bold shadow px-4 py-2" onclick="openClosePortalModal()">
+                    <i class="bi bi-door-closed-fill me-2"></i> Đóng Cổng Đăng Ký
+                </button>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-3">
+                <div class="stat-card active-filter" id="card-all" onclick="filterTab1('all')">
+                    <div class="stat-icon bg-light text-secondary"><i class="bi bi-collection-fill"></i></div>
+                    <div><h4 class="fw-bold mb-0" id="count-all">6</h4><span class="text-muted small">Tổng số lớp đã mở</span></div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card border-success" id="card-ok" onclick="filterTab1('row-ok')" style="background: #f0fdf4;">
+                    <div class="stat-icon bg-white text-success shadow-sm"><i class="bi bi-check-circle-fill"></i></div>
+                    <div><h4 class="fw-bold text-success mb-0" id="count-ok">4</h4><span class="text-muted small">Lớp đủ ĐK / Đã XL</span></div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="stat-card border-danger" id="card-alert" onclick="filterTab1('row-alert')" style="background: #fffdf5;">
+                    <div class="stat-icon bg-white text-danger shadow-sm"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                    <div class="w-100">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="fw-bold text-danger mb-1">Cần rà soát khẩn cấp: <span class="fs-5" id="count-alert">2</span> Lớp</h6>
+                            <button class="btn btn-sm btn-danger fw-bold py-0" onclick="jumpToReviewTab()">Xử lý ngay <i class="bi bi-arrow-right"></i></button>
+                        </div>
+                        <span class="text-muted" style="font-size: 13px;">Bấm vào thẻ này để xem danh sách hoặc bấm "Xử lý ngay".</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <ul class="nav nav-tabs nav-tabs-custom d-flex" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all-classes" type="button" role="tab">
+                        <i class="bi bi-list-ul me-1"></i> Danh sách Lớp học phần
+                    </button>
+                </li>
+                <li class="nav-item ms-auto" role="presentation">
+                    <button class="nav-link tab-danger" id="review-tab" data-bs-toggle="tab" data-bs-target="#review-classes" type="button" role="tab">
+                        <i class="bi bi-shield-lock-fill me-1" id="reviewLockIcon"></i> Cần Rà soát Xử lý (<span id="tab2-count">2</span>)
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="myTabContent">
+                
+                <div class="tab-pane fade show active" id="all-classes" role="tabpanel">
+                    <div class="table-responsive" style="max-height: 50vh; overflow-y: auto;">
+                        <table class="table config-table table-hover align-middle">
+                            <thead style="position: sticky; top: 0; z-index: 10;">
+                                <tr>
+                                    <th style="width: 30%;">Lớp Học Phần</th>
+                                    <th style="width: 20%;">Giảng viên</th>
+                                    <th style="width: 25%;">Tiến độ Sĩ số Đăng ký</th>
+                                    <th style="width: 15%;" class="text-center">Trạng thái</th>
+                                    <th style="width: 10%;" class="text-center">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tab1-tbody">
+                                <tr class="tr-item row-ok">
+                                    <td><span class="class-badge">IT101_01</span><span class="fw-bold">Nhập môn Lập trình C</span></td>
+                                    <td>TS. Nguyễn Trọng Tài</td>
+                                    <td>
+                                        <div class="d-flex justify-content-between font-monospace" style="font-size: 12px;"><span class="text-success fw-bold">40 SV</span> <span class="text-muted">Min: 25</span></div>
+                                        <div class="progress enroll-progress"><div class="progress-bar progress-bar-safe w-100"></div></div>
+                                    </td>
+                                    <td class="text-center"><span class="badge bg-success bg-opacity-10 text-success border border-success"><i class="bi bi-check-circle me-1"></i>Đủ điều kiện</span></td>
+                                    <td class="text-center"><button class="btn btn-sm btn-outline-primary fw-bold px-3" onclick="openStudentList('IT101_01', 'Nhập môn Lập trình C')">Xem DS</button></td>
+                                </tr>
+                                <tr class="tr-item row-ok">
+                                    <td><span class="class-badge">IT101_02</span><span class="fw-bold">Nhập môn Lập trình C</span></td>
+                                    <td>ThS. Lê Hoàng Tuấn</td>
+                                    <td>
+                                        <div class="d-flex justify-content-between font-monospace" style="font-size: 12px;"><span class="text-success fw-bold">35 SV</span> <span class="text-muted">Min: 25</span></div>
+                                        <div class="progress enroll-progress"><div class="progress-bar progress-bar-safe" style="width: 87%"></div></div>
+                                    </td>
+                                    <td class="text-center"><span class="badge bg-success bg-opacity-10 text-success border border-success"><i class="bi bi-check-circle me-1"></i>Đủ điều kiện</span></td>
+                                    <td class="text-center"><button class="btn btn-sm btn-outline-primary fw-bold px-3" onclick="openStudentList('IT101_02', 'Nhập môn Lập trình C')">Xem DS</button></td>
+                                </tr>
+                                <tr class="tr-item row-ok">
+                                    <td><span class="class-badge">MAC101_01</span><span class="fw-bold">Toán cao cấp 1</span></td>
+                                    <td>Cô Phạm Lan</td>
+                                    <td>
+                                        <div class="d-flex justify-content-between font-monospace" style="font-size: 12px;"><span class="text-success fw-bold">75 SV</span> <span class="text-muted">Min: 40</span></div>
+                                        <div class="progress enroll-progress"><div class="progress-bar progress-bar-safe" style="width: 93%"></div></div>
+                                    </td>
+                                    <td class="text-center"><span class="badge bg-success bg-opacity-10 text-success border border-success"><i class="bi bi-check-circle me-1"></i>Đủ điều kiện</span></td>
+                                    <td class="text-center"><button class="btn btn-sm btn-outline-primary fw-bold px-3" onclick="openStudentList('MAC101_01', 'Toán cao cấp 1')">Xem DS</button></td>
+                                </tr>
+                                <tr class="tr-item row-ok">
+                                    <td><span class="class-badge">ENG201_01</span><span class="fw-bold">Tiếng Anh IT</span></td>
+                                    <td>ThS. Trần Thị Mai</td>
+                                    <td>
+                                        <div class="d-flex justify-content-between font-monospace" style="font-size: 12px;"><span class="text-success fw-bold">36 SV</span> <span class="text-muted">Min: 30</span></div>
+                                        <div class="progress enroll-progress"><div class="progress-bar progress-bar-safe" style="width: 90%"></div></div>
+                                    </td>
+                                    <td class="text-center"><span class="badge bg-success bg-opacity-10 text-success border border-success"><i class="bi bi-check-circle me-1"></i>Đủ điều kiện</span></td>
+                                    <td class="text-center"><button class="btn btn-sm btn-outline-primary fw-bold px-3" onclick="openStudentList('ENG201_01', 'Tiếng Anh IT')">Xem DS</button></td>
+                                </tr>
+
+                                <tr class="tr-item row-alert table-danger" id="tab1-row-IT101_04" style="--bs-table-bg: #fff5f5;">
+                                    <td><span class="class-badge">IT101_04</span><span class="fw-bold text-danger">Nhập môn Lập trình C</span></td>
+                                    <td>ThS. Lê Hoàng Tuấn</td>
+                                    <td>
+                                        <div class="d-flex justify-content-between font-monospace" style="font-size: 12px;"><span class="text-danger fw-bold">12 SV</span> <span class="text-muted">Min: 25</span></div>
+                                        <div class="progress enroll-progress"><div class="progress-bar progress-bar-danger" style="width: 30%"></div></div>
+                                    </td>
+                                    <td class="text-center"><span class="badge bg-danger"><i class="bi bi-exclamation-triangle me-1"></i>Thiếu Sĩ số</span></td>
+                                    <td class="text-center"><button class="btn btn-sm btn-danger fw-bold" onclick="jumpToReviewTab()">Xử lý ngay</button></td>
+                                </tr>
+                                <tr class="tr-item row-alert table-danger" id="tab1-row-KTPM03_01" style="--bs-table-bg: #fff5f5;">
+                                    <td><span class="class-badge">KTPM03_01</span><span class="fw-bold text-danger">Kiểm thử Nâng cao</span></td>
+                                    <td>TS. Nguyễn Trọng Tài</td>
+                                    <td>
+                                        <div class="d-flex justify-content-between font-monospace" style="font-size: 12px;"><span class="text-danger fw-bold">05 SV</span> <span class="text-muted">Min: 20</span></div>
+                                        <div class="progress enroll-progress"><div class="progress-bar progress-bar-danger" style="width: 12.5%"></div></div>
+                                    </td>
+                                    <td class="text-center"><span class="badge bg-danger"><i class="bi bi-exclamation-triangle me-1"></i>Thiếu Sĩ số</span></td>
+                                    <td class="text-center"><button class="btn btn-sm btn-danger fw-bold" onclick="jumpToReviewTab()">Xử lý ngay</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="review-classes" role="tabpanel">
+                    
+                    <div id="lockedReviewState">
+                        <div class="lock-icon-bg"><i class="bi bi-lock-fill"></i></div>
+                        <h4 class="fw-bold text-dark mb-2">Hành động bị khóa</h4>
+                        <p class="text-muted" style="font-size: 15px;">Cổng đăng ký tín chỉ hiện vẫn đang mở cho sinh viên thao tác.<br>Bạn cần đóng cổng đăng ký trước khi có thể Hủy, Ghép hoặc Mở ngoại lệ các lớp học phần.</p>
+                    </div>
+
+                    <div class="table-responsive" style="max-height: 50vh; overflow-y: auto; display: none;" id="unlockedReviewState">
+                        <table class="table config-table table-hover align-middle">
+                            <thead style="position: sticky; top: 0; z-index: 10;">
+                                <tr>
+                                    <th style="width: 25%;">Lớp Học Phần (Thiếu SV)</th>
+                                    <th style="width: 20%;">Tiến độ Sĩ số</th>
+                                    <th style="width: 25%;">Gợi ý từ AI</th>
+                                    <th style="width: 30%;" class="text-center">Quyết định Xử lý</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tab2-tbody">
+                                <tr id="tab2-row-IT101_04">
+                                    <td><span class="class-badge">IT101_04</span><span class="fw-bold text-danger">Nhập môn Lập trình C</span><br><small class="text-muted">GV: ThS. Lê Hoàng Tuấn</small></td>
+                                    <td>
+                                        <div class="d-flex justify-content-between font-monospace" style="font-size: 12px;"><span class="text-danger fw-bold">12 SV</span> <span class="text-muted">Min: 25</span></div>
+                                        <div class="progress enroll-progress"><div class="progress-bar progress-bar-danger" style="width: 48%"></div></div>
+                                    </td>
+                                    <td>
+                                        <div class="ai-box ai-suggest-merge">
+                                            <div class="fw-bold mb-1"><i class="bi bi-diagram-2-fill me-1"></i> Khuyên dùng: GHÉP LỚP</div>
+                                            Lớp IT101_02 đang trống 15 chỗ. TKB không xung đột.
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <button class="btn btn-outline-success btn-action fw-bold" onclick="openKeepModal('IT101_04', 'Nhập môn Lập trình C', 12)"><i class="bi bi-shield-check me-1"></i> Mở ngoại lệ</button>
+                                            <button class="btn btn-primary btn-action shadow-sm fw-bold" onclick="openMergeModal('IT101_04', 'Nhập môn Lập trình C', 12)"><i class="bi bi-intersect me-1"></i> Ghép lớp</button>
+                                            <button class="btn btn-outline-danger btn-action fw-bold" onclick="openCancelModal('IT101_04', 'Nhập môn Lập trình C', 12)"><i class="bi bi-trash3 me-1"></i> Hủy lớp</button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <tr id="tab2-row-KTPM03_01">
+                                    <td><span class="class-badge">KTPM03_01</span><span class="fw-bold text-danger">Kiểm thử Nâng cao</span><br><small class="text-muted">GV: TS. Nguyễn Trọng Tài</small></td>
+                                    <td>
+                                        <div class="d-flex justify-content-between font-monospace" style="font-size: 12px;"><span class="text-danger fw-bold">05 SV</span> <span class="text-muted">Min: 20</span></div>
+                                        <div class="progress enroll-progress"><div class="progress-bar progress-bar-danger" style="width: 25%"></div></div>
+                                    </td>
+                                    <td>
+                                        <div class="ai-box ai-suggest-cancel">
+                                            <div class="fw-bold mb-1"><i class="bi bi-x-octagon-fill me-1"></i> Khuyên dùng: HỦY LỚP</div>
+                                            Sĩ số quá thấp. Gợi ý chuyển 5 SV sang học môn tự chọn khác.
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <button class="btn btn-outline-success btn-action fw-bold" onclick="openKeepModal('KTPM03_01', 'Kiểm thử Nâng cao', 5)"><i class="bi bi-shield-check me-1"></i> Mở ngoại lệ</button>
+                                            <button class="btn btn-outline-primary btn-action fw-bold" onclick="openMergeModal('KTPM03_01', 'Kiểm thử Nâng cao', 5)"><i class="bi bi-intersect me-1"></i> Ghép lớp</button>
+                                            <button class="btn btn-danger btn-action shadow-sm fw-bold" onclick="openCancelModal('KTPM03_01', 'Kiểm thử Nâng cao', 5)"><i class="bi bi-trash3-fill me-1"></i> Hủy lớp</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="studentListModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header text-white border-0" style="background: var(--admin-theme);">
+                    <div>
+                        <h5 class="modal-title fw-bold mb-0">Danh sách Sinh viên Đăng ký</h5>
+                        <p class="mb-0" style="font-size: 13px; opacity: 0.9;" id="studentModalSubtitle">Lớp: ...</p>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+                        <input type="text" class="form-control form-control-sm border-secondary w-50" placeholder="Tìm theo MSSV, Tên...">
+                        <button class="btn btn-success btn-sm fw-bold"><i class="bi bi-file-earmark-excel me-1"></i> Xuất Excel</button>
+                    </div>
+                    <table class="table table-hover mb-0" style="font-size: 13.5px;">
+                        <thead class="table-light text-muted">
+                            <tr><th class="text-center">STT</th><th>Mã SV</th><th>Họ và Tên</th><th>Lớp SH</th><th class="text-center">Trạng thái</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td class="text-center">1</td><td class="fw-bold font-monospace">HE150123</td><td class="fw-bold">Nguyễn Văn An</td><td>SE1501</td><td class="text-center"><span class="badge bg-success bg-opacity-10 text-success border border-success">Thành công</span></td></tr>
+                            <tr><td class="text-center">2</td><td class="fw-bold font-monospace">HE150456</td><td class="fw-bold">Trần Thị Bình</td><td>SE1502</td><td class="text-center"><span class="badge bg-success bg-opacity-10 text-success border border-success">Thành công</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer bg-light border-top p-2"><button type="button" class="btn btn-secondary fw-bold btn-sm" data-bs-dismiss="modal">Đóng</button></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="portalOpenWarningModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-danger text-white border-0">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-shield-lock-fill me-2"></i> Hành động bị chặn</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <div class="mb-3"><i class="bi bi-door-open-fill text-danger" style="font-size: 50px;"></i></div>
+                    <h5 class="fw-bold text-dark">Cổng đăng ký vẫn đang mở!</h5>
+                    <p class="text-muted mt-2 mb-0">Sinh viên vẫn đang trong thời gian thao tác. Để tránh xung đột dữ liệu, bạn <b>bắt buộc phải Đóng Cổng Đăng Ký</b> trước khi tiến hành xử lý Hủy/Ghép lớp.</p>
+                </div>
+                <div class="modal-footer bg-light border-0 justify-content-center">
+                    <button type="button" class="btn btn-danger fw-bold shadow px-4" data-bs-dismiss="modal">Đã hiểu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="closePortalModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-danger text-white border-0">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-door-closed-fill me-2"></i> Xác nhận Đóng cổng Đăng ký</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <div class="mb-3"><i class="bi bi-exclamation-triangle-fill text-warning" style="font-size: 50px;"></i></div>
+                    <h5 class="fw-bold text-dark">Sinh viên sẽ không thể thao tác thêm!</h5>
+                    <p class="text-muted mt-2 mb-0">Hệ thống sẽ chốt dữ liệu sĩ số hiện tại. Bạn sẽ được cấp quyền xử lý (Hủy/Ghép/Mở ngoại lệ) các lớp học phần không đạt yêu cầu.</p>
+                </div>
+                <div class="modal-footer bg-light border-0 justify-content-center">
+                    <button type="button" class="btn btn-light fw-bold border" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <button type="button" class="btn btn-danger fw-bold shadow px-4" onclick="confirmClosePortal()"><i class="bi bi-lock-fill me-1"></i> Chấp nhận Đóng cổng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="keepModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-success text-white border-0">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-shield-check text-white me-2"></i> Xác nhận Mở ngoại lệ</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="text-center mb-4">
+                        <h5 class="fw-bold text-dark" id="keepClassName">...</h5>
+                        <span class="badge bg-success fs-6 mt-1" id="keepCount">.. Sinh viên đang chờ</span>
+                    </div>
+
+                    <div class="alert border-success bg-white p-3 shadow-sm mb-0">
+                        <p class="fw-bold text-success border-bottom border-success pb-2 mb-2"><i class="bi bi-info-circle-fill me-1"></i> Ghi chú hệ thống:</p>
+                        <ul class="mb-0 text-dark" style="font-size: 13.5px; padding-left: 20px;">
+                            <li>Lớp học phần này sẽ được <b>duy trì mở</b> dù chưa đạt sĩ số tối thiểu.</li>
+                            <li>Sinh viên có thể tiếp tục đóng học phí và tham gia học bình thường.</li>
+                            <li>Dữ liệu sẽ được đồng bộ ngay sang phân hệ Thời khóa biểu.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0 justify-content-center">
+                    <button type="button" class="btn btn-light fw-bold border" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <button type="button" class="btn btn-success fw-bold shadow" onclick="confirmKeep()"><i class="bi bi-check2-circle me-1"></i> Chấp nhận Mở ngoại lệ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="mergeModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-primary text-white border-0">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-intersect me-2"></i> Tùy chọn Ghép Lớp</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <p class="text-muted mb-1">Lớp cần ghép:</p>
+                        <h6 class="fw-bold text-dark fs-5" id="mergeClassName">...</h6>
+                        <span class="badge bg-primary mt-1" id="mergeCount">.. SV</span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="fw-bold text-dark mb-2"><i class="bi bi-box-arrow-in-right text-primary me-1"></i> Chọn lớp đích để ghép sang:</label>
+                        <div class="custom-list-box">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="targetClass" id="target1" value="IT101_01" checked>
+                                <label class="form-check-label" for="target1">
+                                    <strong>IT101_01</strong> - TS. Nguyễn Trọng Tài <br>
+                                    <span class="text-success small">Đang có: 40/60 SV (Còn trống 20 chỗ)</span>
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="targetClass" id="target2" value="IT101_02">
+                                <label class="form-check-label" for="target2">
+                                    <strong>IT101_02</strong> - ThS. Lê Hoàng Tuấn <br>
+                                    <span class="text-success small">Đang có: 35/50 SV (Còn trống 15 chỗ)</span>
+                                </label>
+                            </div>
+                        </div>
+                        <small class="text-muted mt-1 d-block"><i class="bi bi-info-circle"></i> Hệ thống sẽ tự động đối chiếu TKB để tránh trùng lịch của sinh viên.</small>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0 justify-content-center">
+                    <button type="button" class="btn btn-light fw-bold border" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <button type="button" class="btn btn-primary fw-bold shadow px-4" onclick="confirmMerge()"><i class="bi bi-check2 me-1"></i> Xác nhận Ghép lớp</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-danger text-white border-0">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-octagon-fill me-2"></i> Xác nhận Hủy lớp học phần</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="text-center mb-4">
+                        <h5 class="fw-bold text-dark" id="cancelClassName">...</h5>
+                        <span class="badge bg-danger fs-6 mt-1" id="cancelCount">.. Sinh viên bị ảnh hưởng</span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="fw-bold text-dark mb-2"><i class="bi bi-arrow-right-circle-fill text-danger me-1"></i> Chọn các môn học cho phép SV đăng ký bù (có thể chọn nhiều):</label>
+                        <div class="custom-list-box border-danger">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input border-danger" type="checkbox" id="alt1" value="SE401" checked>
+                                <label class="form-check-label" for="alt1">SE401 - Bảo mật phần mềm (Tự chọn)</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input border-danger" type="checkbox" id="alt2" value="SE402" checked>
+                                <label class="form-check-label" for="alt2">SE402 - Điện toán đám mây (Tự chọn)</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input border-danger" type="checkbox" id="alt3" value="PRJ301">
+                                <label class="form-check-label" for="alt3">PRJ301 - Dự án chuyên ngành</label>
+                            </div>
+                        </div>
+                        <small class="text-muted mt-1 d-block"><i class="bi bi-info-circle"></i> Danh sách này sẽ hiện thị trên app của sinh viên bị hủy lớp để họ chọn bù.</small>
+                    </div>
+
+                    <div class="alert border-danger bg-white p-3 shadow-sm mb-0">
+                        <p class="fw-bold text-danger border-bottom border-danger pb-2 mb-2"><i class="bi bi-gear-wide-connected me-1"></i> Tiến trình ngầm sẽ được kích hoạt:</p>
+                        <ol class="mb-0 text-dark" style="font-size: 13px; padding-left: 15px; line-height: 1.6;">
+                            <li>Hoàn trả học phí môn bị hủy.</li>
+                            <li>Gửi Push Notification thông báo hủy lớp.</li>
+                            <li>Mở khóa tín chỉ và cấp quyền đăng ký môn bù (các môn đã tick ở trên).</li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0 justify-content-center">
+                    <button type="button" class="btn btn-light fw-bold border" data-bs-dismiss="modal">Suy nghĩ lại</button>
+                    <button type="button" class="btn btn-danger fw-bold shadow" onclick="confirmCancel()"><i class="bi bi-trash3-fill me-1"></i> Chấp nhận Hủy lớp</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let isPortalOpen = true; 
+        let currentProcessRowId = ''; 
+
+        const closePortalModal = new bootstrap.Modal(document.getElementById('closePortalModal'));
+        const portalOpenWarningModal = new bootstrap.Modal(document.getElementById('portalOpenWarningModal'));
+        const keepModal = new bootstrap.Modal(document.getElementById('keepModal'));
+        const mergeModal = new bootstrap.Modal(document.getElementById('mergeModal'));
+        const cancelModal = new bootstrap.Modal(document.getElementById('cancelModal'));
+        const studentListModal = new bootstrap.Modal(document.getElementById('studentListModal'));
+
+        // ==========================================
+        // 1. HỆ THỐNG TOAST NOTIFICATION MỚI
+        // ==========================================
+        function showSysToast(message, isError = false) {
+            const container = document.getElementById('custom-toast-container');
+            const toast = document.createElement('div');
+            toast.className = `sys-toast ${isError ? 'toast-error' : ''}`;
+            
+            // Icon thay đổi theo trạng thái (thành công / cảnh báo lỗi)
+            const icon = isError ? '<i class="bi bi-exclamation-circle-fill toast-icon"></i>' : '<i class="bi bi-check-circle-fill toast-icon"></i>';
+            
+            toast.innerHTML = `
+                ${icon}
+                <span>${message}</span>
+                <i class="bi bi-x toast-close" onclick="this.parentElement.remove()"></i>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Kích hoạt animation trượt vào
+            setTimeout(() => toast.classList.add('show'), 10);
+
+            // Tự động tắt sau 3 giây
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400); // Đợi CSS transition xong thì xóa node
+            }, 3000);
+        }
+
+
+        // ==========================================
+        // 2. UI & NAVIGATION
+        // ==========================================
+        function openStudentList(code, name) {
+            document.getElementById('studentModalSubtitle').innerHTML = `Lớp: <strong>${code}</strong> - ${name}`;
+            studentListModal.show();
+        }
+
+        function jumpToReviewTab() {
+            if(isPortalOpen) {
+                portalOpenWarningModal.show();
+            } else {
+                let triggerEl = document.querySelector('#review-tab');
+                bootstrap.Tab.getOrCreateInstance(triggerEl).show();
+            }
+        }
+
+        function openClosePortalModal() { closePortalModal.show(); }
+
+        function confirmClosePortal() {
+            isPortalOpen = false;
+            closePortalModal.hide();
+
+            let badge = document.getElementById('portalStatusBadge');
+            badge.className = "status-badge status-closed mb-2 shadow-sm";
+            document.getElementById('portalStatusText').innerText = "CỔNG ĐĂNG KÝ ĐÃ ĐÓNG";
+            document.getElementById('pulseDot').className = "pulse-dot bg-danger";
+
+            document.getElementById('headerActionArea').innerHTML = `
+                <button class="btn btn-outline-secondary fw-bold shadow-sm" onclick="finishProcess()">
+                    <i class="bi bi-check2-all me-1"></i> Hoàn tất Đợt rà soát
+                </button>
+            `;
+
+            document.getElementById('lockedReviewState').style.display = "none";
+            document.getElementById('unlockedReviewState').style.display = "block";
+            document.getElementById('reviewLockIcon').className = "bi bi-exclamation-circle-fill me-1";
+
+            let triggerEl = document.querySelector('#review-tab');
+            bootstrap.Tab.getOrCreateInstance(triggerEl).show();
+            
+            showSysToast("Cổng đăng ký đã đóng. Mở khóa quyền Xử lý lớp!");
+        }
+
+        // ==========================================
+        // 3. XỬ LÝ 3 HÀNH ĐỘNG: GIỮ - GHÉP - HỦY
+        // ==========================================
+
+        function openKeepModal(rowId, className, svCount) {
+            currentProcessRowId = rowId;
+            document.getElementById('keepClassName').innerText = `${rowId} - ${className}`;
+            document.getElementById('keepCount').innerText = `${svCount} Sinh viên đang chờ`;
+            keepModal.show();
+        }
+
+        function confirmKeep() {
+            keepModal.hide();
+            updateUI_AfterProcess(currentProcessRowId, 'keep', 'Đã mở ngoại lệ', 'bg-success bg-opacity-10 text-success border border-success');
+            showSysToast("Đã duyệt Mở ngoại lệ thành công!");
+        }
+
+        function openMergeModal(rowId, className, svCount) {
+            currentProcessRowId = rowId;
+            document.getElementById('mergeClassName').innerText = `${rowId} - ${className}`;
+            document.getElementById('mergeCount').innerText = `${svCount} Sinh viên cần chuyển`;
+            mergeModal.show();
+        }
+
+        function confirmMerge() {
+            mergeModal.hide();
+            updateUI_AfterProcess(currentProcessRowId, 'merge', 'Đã ghép lớp', 'bg-primary bg-opacity-10 text-primary border border-primary');
+            showSysToast("Ghép lớp và cập nhật TKB thành công!");
+        }
+
+        function openCancelModal(rowId, className, svCount) {
+            currentProcessRowId = rowId;
+            document.getElementById('cancelClassName').innerText = `${rowId} - ${className}`;
+            document.getElementById('cancelCount').innerText = `${svCount} Sinh viên bị ảnh hưởng`;
+            cancelModal.show();
+        }
+
+        function confirmCancel() {
+            cancelModal.hide();
+            updateUI_AfterProcess(currentProcessRowId, 'cancel', 'Đã hủy lớp', 'bg-secondary text-white');
+            showSysToast("Đã Hủy lớp và gửi Notification đến Sinh viên!");
+        }
+
+        // ==========================================
+        // CẬP NHẬT GIAO DIỆN CHUNG
+        // ==========================================
+        function updateUI_AfterProcess(rowId, actionType, textStatus, badgeClass) {
+            let tab2Row = document.getElementById(`tab2-row-${rowId}`);
+            if(tab2Row) {
+                tab2Row.style.transition = "0.3s";
+                tab2Row.style.opacity = "0";
+                setTimeout(() => { tab2Row.remove(); }, 300);
+            }
+
+            let tab1Row = document.getElementById(`tab1-row-${rowId}`);
+            if(tab1Row) {
+                if (actionType === 'cancel') {
+                    tab1Row.className = "tr-item row-canceled table-light text-muted"; 
+                } else {
+                    tab1Row.className = "tr-item row-ok"; 
+                }
+                tab1Row.style.cssText = ""; 
+                
+                tab1Row.querySelector('td:nth-child(4)').innerHTML = `<span class="badge ${badgeClass}"><i class="bi bi-info-circle me-1"></i>${textStatus}</span>`;
+                tab1Row.querySelector('td:nth-child(5)').innerHTML = `<button class="btn btn-sm btn-outline-secondary fw-bold" disabled>Đã xử lý</button>`;
+            }
+
+            setTimeout(recalculateStats, 350);
+        }
+
+        function recalculateStats() {
+            let total = document.querySelectorAll('#tab1-tbody .tr-item').length;
+            let okCount = document.querySelectorAll('#tab1-tbody .row-ok').length; 
+            let alertCount = document.querySelectorAll('#tab1-tbody .row-alert').length;
+
+            document.getElementById('count-all').innerText = total;
+            document.getElementById('count-ok').innerText = okCount;
+            document.getElementById('count-alert').innerText = alertCount;
+            document.getElementById('tab2-count').innerText = alertCount;
+            
+            if(alertCount === 0) {
+                document.getElementById('tab2-tbody').innerHTML = `<tr><td colspan="4" class="text-center py-5 text-success fw-bold fs-5"><i class="bi bi-check2-circle fs-1 d-block mb-2"></i> Đã xử lý toàn bộ các lớp không đủ điều kiện!</td></tr>`;
+                document.getElementById('review-tab').classList.remove('tab-danger');
+                document.getElementById('review-tab').classList.add('text-success');
+            }
+        }
+
+        function filterTab1(type) {
+            document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active-filter'));
+            if(type === 'all') document.getElementById('card-all').classList.add('active-filter');
+            else if(type === 'row-ok') document.getElementById('card-ok').classList.add('active-filter');
+            else if(type === 'row-alert') document.getElementById('card-alert').classList.add('active-filter');
+
+            let rows = document.querySelectorAll('#tab1-tbody .tr-item');
+            rows.forEach(row => {
+                if(type === 'all' || row.classList.contains(type)) row.style.display = '';
+                else row.style.display = 'none';
+            });
+
+            let triggerEl = document.querySelector('#all-tab');
+            bootstrap.Tab.getOrCreateInstance(triggerEl).show();
+        }
+
+        function finishProcess() {
+            let remaining = document.querySelectorAll('#tab2-tbody tr[id^="tab2-row"]').length;
+            if(remaining > 0) {
+                // Thay thế cảnh báo alert bằng Toast (màu đỏ)
+                showSysToast("Vui lòng xử lý hết danh sách lỗi trước khi Hoàn tất đợt!", true);
+            } else {
+                // Hiển thị Toast hoàn tất y hệt ảnh 3
+                showSysToast("Đã phê duyệt! Hệ thống đã Lock dữ liệu và đưa vào Master Data.");
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hội Sở - Quản trị Hệ thống Đào tạo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root { 
+            --bg-light: #f4f6f9; 
+            --text-main: #333;
+            /* Đổi sang tone màu Xanh dương cho quyền Quản trị (Trust & Corporate) */
+            --admin-theme: #0d6efd; 
+            --admin-light: #e7f1ff;
+        }
+        body { background-color: var(--bg-light); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; overflow-x: hidden; font-size: 14px; color: var(--text-main);}
+
+        /* --- SIDEBAR CHÍNH (Thu gọn) --- */
+        .main-sidebar { width: 80px; background: #1a1d20; border-right: 1px solid #dee2e6; height: 100vh; position: fixed; left: 0; top: 0; z-index: 1000; padding-top: 20px; display: flex; flex-direction: column; align-items: center; box-shadow: 2px 0 5px rgba(0,0,0,0.05); }
+        .sidebar-icon { width: 45px; height: 45px; background: #2c3034; color: #adb5bd; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; transition: 0.3s; margin-bottom: 5px; }
+        .sidebar-icon:hover, .sidebar-icon.active { background: var(--admin-theme); color: #fff; box-shadow: 0 4px 8px rgba(13, 110, 253, 0.4); }
+        .sidebar-text { font-size: 11px; margin-bottom: 20px; color: #adb5bd; font-weight: 600; text-align: center; }
+
+        /* --- MENU PHỤ (Mở rộng) --- */
+        .sub-sidebar { width: 250px; background: #fff; height: 100vh; position: fixed; left: 80px; top: 0; border-right: 1px solid #dee2e6; overflow-y: auto; padding-top: 20px;}
+        .admin-profile { padding: 10px 20px 20px 20px; border-bottom: 1px solid #eee; margin-bottom: 15px; text-align: center; }
+        .avatar-circle { width: 70px; height: 70px; background-color: var(--admin-light); color: var(--admin-theme); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: bold; margin: 0 auto 10px auto; border: 2px solid var(--admin-theme); }
+        
+        .sub-menu-item { display: flex; align-items: center; padding: 12px 20px; font-size: 14px; color: var(--text-main); text-decoration: none; font-weight: 500; border-left: 4px solid transparent; transition: 0.2s ease; }
+        .sub-menu-item i { font-size: 1.2rem; margin-right: 15px; color: #555; width: 25px; text-align: center; }
+        .sub-menu-item:hover, .sub-menu-item.active { background: var(--admin-light); color: var(--admin-theme); }
+        .sub-menu-item:hover i, .sub-menu-item.active i { color: var(--admin-theme); }
+        .sub-menu-item.active { font-weight: bold; border-left: 4px solid var(--admin-theme); }
+
+        /* --- NỘI DUNG CHÍNH --- */
+        .main-content { margin-left: 330px; padding: 30px 40px; max-width: 1400px; animation: fadeIn 0.4s ease;}
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- STAT CARD --- */
+        .stat-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); border: 1px solid #dee2e6; display: flex; align-items: center; margin-bottom: 20px; transition: 0.2s;}
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.06); border-color: var(--admin-theme);}
+        .stat-icon { width: 55px; height: 55px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 26px; margin-right: 15px; }
+        
+        /* --- SCHEDULE & ALERT CARDS --- */
+        .card-box { background: #fff; border-radius: 12px; border: 1px solid #dee2e6; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); height: 100%; }
+        .card-title-custom { font-weight: 700; color: #333; margin-bottom: 15px; font-size: 15px; border-bottom: 2px solid #f4f6f9; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;}
+        
+        /* Chuyển class schedule-item thành campus-item cho logic quản trị */
+        .campus-item { border-left: 4px solid var(--admin-theme); background: #f8f9fa; padding: 12px 15px; border-radius: 0 8px 8px 0; margin-bottom: 12px; transition: 0.2s; display: flex; justify-content: space-between; align-items: center;}
+        .campus-item:hover { background: var(--admin-light); }
+        .campus-name { font-weight: bold; color: var(--text-main); font-size: 14px; margin-bottom: 5px; display: block;}
+        
+        .alert-item { padding: 12px 15px; border-radius: 8px; margin-bottom: 10px; font-size: 13.5px; border: 1px solid transparent; }
+        .alert-warning-custom { background-color: #fffdf5; border-color: #ffecb5; color: #664d03; }
+        .alert-info-custom { background-color: #f0fdf4; border-color: #d1e7dd; color: #0f5132; }
+    </style>
+</head>
+<body>
+    
+    <div class="main-sidebar">
+        <a href="#" class="text-decoration-none d-flex flex-column align-items-center">
+            <div class="sidebar-icon active"><i class="bi bi-grid-fill"></i></div>
+            <div class="sidebar-text text-white">Tổng quan</div>
+        </a>
+        
+        <a href="#" class="text-decoration-none d-flex flex-column align-items-center">
+            <div class="sidebar-icon"><i class="bi bi-building"></i></div>
+            <div class="sidebar-text">Phân hiệu</div>
+        </a>
+        
+        <a href="#" class="text-decoration-none d-flex flex-column align-items-center">
+            <div class="sidebar-icon"><i class="bi bi-journal-code"></i></div>
+            <div class="sidebar-text">Đào tạo</div>
+        </a>
+        
+        <div class="d-flex flex-column align-items-center mt-auto mb-3">
+            <a href="#" class="text-decoration-none d-flex flex-column align-items-center">
+                <div class="sidebar-icon"><i class="bi bi-box-arrow-right"></i></div>
+                <div class="sidebar-text">Đăng xuất</div>
+            </a>
+        </div>
+    </div>
+
+    <div class="sub-sidebar">
+        <div class="admin-profile">
+            <div class="avatar-circle"><i class="bi bi-shield-lock-fill"></i></div>
+            <h6 class="fw-bold mb-1 text-dark">Ban Giám Đốc</h6>
+            <span class="badge bg-danger text-white border font-monospace">HQ-ADMIN</span>
+            <div class="mt-2 text-muted" style="font-size: 12px;">Quyền: Toàn hệ thống</div>
+        </div>
+        <a href="#" class="sub-menu-item active"><i class="bi bi-speedometer2"></i> Báo cáo tổng quát</a>
+        <a href="#" class="sub-menu-item"><i class="bi bi-list-columns-reverse"></i> Khung chương trình chuẩn</a>
+        <a href="#" class="sub-menu-item"><i class="bi bi-people"></i> Quản lý Giảng viên</a>
+        <a href="#" class="sub-menu-item"><i class="bi bi-bar-chart-line"></i> Chỉ số chất lượng (KPI)</a>
+        <a href="#" class="sub-menu-item"><i class="bi bi-gear"></i> Cài đặt tham số</a>
+    </div>
+
+    <div class="main-content">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold mb-1" style="color: #222;">Tổng Quan Hệ Thống Đào Tạo</h3>
+                <p class="text-muted mb-0">Cập nhật lúc: 10:45 AM • Trạng thái: Bình thường</p>
+            </div>
+            <button class="btn btn-primary fw-bold px-4">
+                <i class="bi bi-plus-circle me-1"></i> Tạo Khung Đào Tạo Mới
+            </button>
+        </div>
+
+        <div class="row mb-2">
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: var(--admin-light); color: var(--admin-theme);"><i class="bi bi-building"></i></div>
+                    <div class="w-100">
+                        <h4 class="fw-bold mb-0">04 <span class="text-muted fs-6 fw-normal">cơ sở</span></h4>
+                        <span class="text-muted">Phân hiệu đang hoạt động</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #e6f8f0; color: #20c997;"><i class="bi bi-people-fill"></i></div>
+                    <div class="w-100">
+                        <h4 class="fw-bold mb-0">12,450 <span class="text-success fs-6 fw-bold">↑ 5%</span></h4>
+                        <span class="text-muted">Tổng số Sinh viên</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card border-warning">
+                    <div class="stat-icon bg-white text-warning shadow-sm"><i class="bi bi-book-half"></i></div>
+                    <div>
+                        <h4 class="fw-bold mb-0 text-dark">85</h4>
+                        <span class="text-muted">Khung chương trình đang áp dụng</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-7">
+                <div class="card-box">
+                    <div class="card-title-custom">
+                        <span><i class="bi bi-activity text-primary me-2"></i> Tình trạng các Phân hiệu</span>
+                        <a href="#" class="text-decoration-none text-muted" style="font-size: 13px;">Chi tiết <i class="bi bi-arrow-right"></i></a>
+                    </div>
+                    
+                    <div class="campus-item">
+                        <div>
+                            <span class="campus-name">Phân hiệu Hà Nội</span>
+                            <div class="text-muted" style="font-size: 13px;"><i class="bi bi-person-badge me-1"></i> Quản lý: Nguyễn Minh Anh</div>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-success mb-1">Hoạt động tốt</span><br>
+                            <span class="text-muted" style="font-size: 12px;">5,200 Sinh viên</span>
+                        </div>
+                    </div>
+
+                    <div class="campus-item" style="border-left-color: #20c997;">
+                        <div>
+                            <span class="campus-name">Phân hiệu Thái Nguyên</span>
+                            <div class="text-muted" style="font-size: 13px;"><i class="bi bi-person-badge me-1"></i> Quản lý: Dương Anh Đức</div>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-success mb-1">Hoạt động tốt</span><br>
+                            <span class="text-muted" style="font-size: 12px;">2,150 Sinh viên</span>
+                        </div>
+                    </div>
+
+                    <div class="campus-item" style="border-left-color: #ffc107;">
+                        <div>
+                            <span class="campus-name">Phân hiệu Đà Nẵng</span>
+                            <div class="text-muted" style="font-size: 13px;"><i class="bi bi-person-badge me-1"></i> Quản lý: Nguyễn Thị Kim Dung</div>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-warning text-dark mb-1">Cần hỗ trợ GV</span><br>
+                            <span class="text-muted" style="font-size: 12px;">3,800 Sinh viên</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-5">
+                <div class="card-box">
+                    <div class="card-title-custom">
+                        <span><i class="bi bi-check2-square text-danger me-2"></i> Chờ phê duyệt & Cảnh báo</span>
+                    </div>
+                    
+                    <div class="alert-item alert-warning-custom">
+                        <i class="bi bi-file-earmark-text-fill me-2"></i> <strong>Yêu cầu phê duyệt:</strong> Phân hiệu Thái Nguyên vừa trình Hội đồng bộ giáo trình mới cho môn KTPM01_02.
+                    </div>
+                    
+                    <div class="alert-item alert-info-custom">
+                        <i class="bi bi-info-circle-fill me-2"></i> <strong>Cập nhật hệ thống:</strong> Khung chương trình chuẩn Khóa 2026 sẽ tự động áp dụng vào lúc 00:00 ngày mai.
+                    </div>
+
+                    <div class="alert-item bg-light border text-danger">
+                        <i class="bi bi-exclamation-octagon-fill me-2"></i> <strong>Cảnh báo chất lượng:</strong> Tỉ lệ trượt môn "Nhập môn Lập trình C" tại cơ sở Đà Nẵng vượt mức 25%.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+<script>
+// 1. LOGIC CHUYỂN MÀN HÌNH (Giữ nguyên)
+function switchMenu(screenId, clickedLink) {
+    const allScreens = document.querySelectorAll('.app-screen');
+    allScreens.forEach(screen => screen.classList.remove('active-screen'));
+    document.getElementById(screenId).classList.add('active-screen');
+
+    const allLinks = document.querySelectorAll('.sub-menu-item');
+    allLinks.forEach(link => link.classList.remove('active'));
+    clickedLink.classList.add('active');
+}
+
+// 2. LOGIC VẼ BIỂU ĐỒ DASHBOARD (Thêm mới)
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // --- BIỂU ĐỒ 1: CỘT SO SÁNH SINH VIÊN (Bar Chart) ---
+    const ctxCampus = document.getElementById('campusChart').getContext('2d');
+    new Chart(ctxCampus, {
+        type: 'bar',
+        data: {
+            labels: ['Hà Nội', 'Đà Nẵng', 'Thái Nguyên', 'Cần Thơ', 'Hồ Chí Minh'],
+            datasets: [{
+                label: 'Số lượng Sinh viên',
+                data: [5200, 3800, 2150, 1800, 4100],
+                backgroundColor: [
+                    'rgba(13, 110, 253, 0.8)',  // Xanh dương Admin
+                    'rgba(243, 111, 33, 0.8)',  // Cam FPT
+                    'rgba(32, 201, 151, 0.8)',  // Xanh lá
+                    'rgba(255, 193, 7, 0.8)',   // Vàng
+                    'rgba(111, 66, 193, 0.8)'   // Tím
+                ],
+                borderRadius: 6, // Bo góc cột cho hiện đại
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false } // Giấu ghi chú thừa
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+
+    // --- BIỂU ĐỒ 2: TRÒN TRẠNG THÁI (Doughnut Chart) ---
+    const ctxStatus = document.getElementById('statusChart').getContext('2d');
+    new Chart(ctxStatus, {
+        type: 'doughnut',
+        data: {
+            labels: ['Đang giảng dạy', 'Chờ phê duyệt', 'Đã đóng'],
+            datasets: [{
+                data: [85, 12, 3], // Tỉ lệ phần trăm
+                backgroundColor: [
+                    '#0d6efd', // Xanh dương (Đang dạy)
+                    '#ffc107', // Vàng (Chờ duyệt)
+                    '#dc3545'  // Đỏ (Đã đóng)
+                ],
+                borderWidth: 2,
+                hoverOffset: 5 // Hiệu ứng phóng to khi hover chuột
+            }]
+        },
+        options: {
+            responsive: true,
+            cutout: '70%', // Làm mỏng vòng tròn
+            plugins: {
+                legend: { position: 'bottom' } // Để chú thích ở dưới
+            }
+        }
+    });
+
+});</script>
+</html>

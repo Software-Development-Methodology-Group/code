@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nội dung giảng dạy</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root { 
+            --primary-orange: #f36f21; 
+            --primary-light: #fff5ec; 
+            --bg-light: #f4f6f9; 
+            --text-main: #333;
+            --text-sub: #555;
+            --success-green: #198754;
+            --border-color: #e9ecef;
+        }
+        body { background-color: var(--bg-light); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
+
+        /* --- SIDEBAR CHÍNH --- */
+        .main-sidebar { width: 80px; background: #fff; border-right: 1px solid #dee2e6; height: 100vh; position: fixed; left: 0; top: 0; z-index: 1000; padding-top: 20px; display: flex; flex-direction: column; align-items: center; box-shadow: 2px 0 5px rgba(0,0,0,0.05); }
+        .sidebar-icon { width: 45px; height: 45px; background: #f8f9fa; color: #666; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; transition: 0.3s; margin-bottom: 5px; }
+        .sidebar-icon:hover { background: var(--primary-orange); color: #fff; }
+        .sidebar-text { font-size: 11px; margin-bottom: 20px; color: #666; font-weight: 600; text-align: center; }
+
+        /* --- SIDEBAR PHỤ --- */
+        .sub-sidebar { width: 200px; background: #fff; height: 100vh; position: fixed; left: 80px; top: 0; border-right: 1px solid #bdbdbd; overflow-y: auto; }
+        .course-header { padding: 25px 20px 15px 20px; border-bottom: 1px solid #eee; margin-bottom: 15px; }
+        .sub-menu-item { display: flex; align-items: center; padding: 10px 15px; font-size: 12px; color: var(--text-main); text-decoration: none; font-weight: 500; border-left: 4px solid transparent; transition: 0.2s ease; }
+        .sub-menu-item i { font-size: 16; margin-right: 15px; color: #555; width: 25px; text-align: center; }
+        .sub-menu-item:hover, .sub-menu-item.active { background: var(--primary-light); color: var(--primary-orange); }
+        .sub-menu-item:hover i, .sub-menu-item.active i { color: var(--primary-orange); }
+        .sub-menu-item.active { font-weight: bold; border-left: 4px solid var(--primary-orange); }
+
+        /* --- NỘI DUNG CHÍNH --- */
+        .main-content { margin-left: 300px; padding: 40px; max-width: 950px; }
+
+        /* ================== STYLE THEO CHUẨN ẢNH BẠN GỬI ================== */
+        .lesson-card {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            overflow: hidden;
+        }
+        
+        /* Hiệu ứng khi Card mở ra (viền cam) */
+        .lesson-card.active-card {
+            border: 1px solid var(--primary-orange);
+            box-shadow: 0 4px 15px rgba(243, 111, 33, 0.08);
+        }
+
+        /* Thanh tiêu đề Card */
+        .lesson-header {
+            background-color: #fdfdfd;
+            padding: 16px 25px;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            border-bottom: 1px solid transparent;
+        }
+        .lesson-card.active-card .lesson-header {
+            background-color: var(--primary-light);
+            color: var(--primary-orange);
+            border-bottom: 1px solid var(--primary-orange); /* Viền ngăn cách tiêu đề và nội dung */
+        }
+        .chevron-icon { color: #888; transition: transform 0.3s ease; font-size: 1.2rem; }
+        .lesson-card.active-card .chevron-icon { transform: rotate(180deg); color: var(--primary-orange); }
+
+        /* ================== BỐ CỤC ITEM BÊN TRONG CỰC CHUẨN ================== */
+        .inner-content {
+            padding: 0;
+            background: #fff;
+        }
+        .content-row {
+            padding: 20px 25px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .content-row:last-child { border-bottom: none; }
+
+        /* Phần Header của từng Row (Gồm Icon + Chữ + Trạng thái bên phải) */
+        .row-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .row-title-area {
+            display: flex;
+            align-items: center;
+        }
+        .row-icon {
+            color: #6c757d;
+            font-size: 1.3rem;
+            width: 35px; /* Cố định width để text bên dưới dễ canh lề */
+            display: inline-block;
+        }
+        .row-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #444;
+        }
+
+        /* Phần Trạng thái bên phải */
+        .status-passed { color: var(--success-green); font-weight: 600; display: flex; align-items: center; gap: 5px; font-size: 15px; }
+        .status-missing { color: #dc3545; font-weight: 600; display: flex; align-items: center; gap: 5px; font-size: 15px; }
+        .icon-attachment { color: #0d6efd; font-size: 1.4rem; transform: rotate(45deg); cursor: pointer; }
+
+        /* Phần Detail thụt lề ngay bên dưới (ĐIỂM NHẤN CỦA BỨC ẢNH) */
+        .row-detail {
+            margin-top: 12px;
+            margin-left: 35px; /* Thụt vào chính xác bằng độ rộng của icon bên trên */
+            color: var(--text-sub);
+            font-size: 15px;
+        }
+        
+        .row-detail ul {
+            margin-bottom: 0;
+            padding-left: 18px;
+            line-height: 1.8;
+        }
+        .row-detail li {
+            margin-bottom: 6px;
+        }
+        .row-detail li:last-child { margin-bottom: 0; }
+
+        /* Style cho link tài liệu */
+        .doc-link {
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .doc-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    
+    <div class="main-sidebar">
+        <div class="d-flex flex-column align-items-center"><a href="index.html" class="text-decoration-none text-dark d-flex flex-column align-items-center"><div class="sidebar-icon"><i class="bi bi-person-video3"></i></div><div class="sidebar-text">Giảng viên</div></a></div>
+        <div class="d-flex flex-column align-items-center">
+            <a href="khaothi-dashboard.html" class="text-decoration-none text-dark d-flex flex-column align-items-center">
+                <div class="sidebar-icon"><i class="bi bi-clipboard-check"></i></div>
+                <div class="sidebar-text">Khảo thí</div>
+            </a>
+        </div>        
+        <div class="d-flex flex-column align-items-center">
+            <a href="hoidong-pheduyet.html" class="text-decoration-none text-dark d-flex flex-column align-items-center">
+                           <div class="sidebar-icon"><i class="bi bi-people"></i></div><div class="sidebar-text">Hội đồng</div>
+
+            </a>
+        </div>
+         <div class="d-flex flex-column align-items-center">
+            <a href="hethong-dashboard.html" class="text-decoration-none text-dark d-flex flex-column align-items-center">
+                <div class="sidebar-icon"><i class="bi bi-gear"></i></div>
+                <div class="sidebar-text">Hệ thống</div>
+            </a>
+        </div>
+        <div class="d-flex flex-column align-items-center mt-auto mb-3"> <a href="../dangnhap/dangnhap.html" class="text-decoration-none text-dark d-flex flex-column align-items-center">
+            <div class="sidebar-icon"><i class="bi bi-box-arrow-right"></i></div>
+            <div class="sidebar-text" onclick="xulyDangxuat()">Đăng xuất</div>
+        </a></div>
+    </div>
+
+    <div class="sub-sidebar">
+        <div class="course-header">
+            <a href="lophocphan.html" class="text-decoration-none text-dark d-inline-block mb-3" style="font-size: 14px;">
+                <i class="bi bi-arrow-left"></i> Quay lại danh sách
+            </a>
+            <h5 class="fw-bold text-dark mb-1">Kiểm thử phần mềm</h5>
+            <span class="badge bg-success text-white">Katalon</span>
+        </div>
+        <a href="thongtinlophoc.html" class="sub-menu-item"><i class="bi bi-info-circle"></i> Thông tin lớp học</a>
+        <a href="noidunggiangday.html" class="sub-menu-item active"><i class="bi bi-book"></i> Nội dung giảng dạy</a>
+        <a href="quanlydiem.html" class="sub-menu-item"><i class="bi bi-journal-check"></i> Quản lý điểm</a>
+        <a href="#" class="sub-menu-item"><i class="bi bi-bell"></i> Thông báo</a>
+        <a href="diemdanh.html" class="sub-menu-item"><i class="bi bi-calendar2-check"></i> Bảng điểm danh</a>
+    </div>
+
+    <div class="main-content">
+        <h2 class="fw-bold text-dark mb-4">Nội dung giảng dạy</h2>
+
+        <div class="lesson-card">
+            <div class="lesson-header" data-bs-toggle="collapse" data-bs-target="#content-1">
+                <span>BÀI 1: TỔNG QUAN VỀ KIỂM THỬ PHẦN MỀM</span>
+                <i class="bi bi-chevron-up chevron-icon"></i>
+            </div>
+            
+            <div class="collapse" id="content-1">
+                <div class="inner-content">
+                    
+                    <div class="content-row">
+                        <div class="row-header">
+                            <div class="row-title-area">
+                                <i class="bi bi-file-earmark-text row-icon"></i>
+                                <span class="row-title">Mục tiêu</span>
+                            </div>
+                            <div class="status-passed"><i class="bi bi-check-circle"></i> Đạt</div>
+                        </div>
+                        <div class="row-detail">
+                            <ul>
+                                <li>Hiểu rõ vai trò và lịch sử của kiểm thử phần mềm.</li>
+                                <li>Nắm vững vòng đời kiểm thử phần mềm (STLC).</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="content-row">
+                        <div class="row-header">
+                            <div class="row-title-area">
+                                <i class="bi bi-layout-text-window-reverse row-icon"></i>
+                                <span class="row-title">Nội dung</span>
+                            </div>
+                            <div class="status-passed"><i class="bi bi-check-circle"></i> Đạt</div>
+                        </div>
+                        <div class="row-detail">
+                            <ul>
+                                <li>Lỗi, Khiếm khuyết và Thất bại trong phần mềm.</li>
+                                <li>7 nguyên tắc cơ bản của kiểm thử.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="content-row">
+                        <div class="row-header">
+                            <div class="row-title-area">
+                                <i class="bi bi-journal-text row-icon"></i>
+                                <span class="row-title">Tài liệu giảng dạy</span>
+                            </div>
+                            <div><i class="bi bi-paperclip icon-attachment"></i></div>
+                        </div>
+                        <div class="row-detail d-flex flex-column">
+                            <a href="#" class="doc-link text-primary">
+                                <i class="bi bi-filetype-pdf text-danger me-2 fs-5"></i> Slide_TongQuan.pdf
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="content-row">
+                        <div class="row-header">
+                            <div class="row-title-area">
+                                <i class="bi bi-clock-history row-icon"></i>
+                                <span class="row-title">Bài tập chuyên đề - 02/03/2026 13:24</span>
+                            </div>
+                            <div class="status-passed"><i class="bi bi-check-circle"></i> Đạt</div>
+                        </div>
+                        <div class="row-detail">
+                            <a href="#" class="doc-link text-primary mt-1">
+                                <i class="bi bi-link-45deg me-1 fs-5"></i> Link nộp bài tập trắc nghiệm
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="lesson-card">
+            <div class="lesson-header collapsed" data-bs-toggle="collapse" data-bs-target="#content-2">
+                <span>BÀI 2: KIỂM THỬ HỘP ĐEN (BLACK-BOX TESTING)</span>
+                <i class="bi bi-chevron-down chevron-icon"></i>
+            </div>
+            <div class="collapse" id="content-2">
+                <div class="inner-content">
+
+                    <div class="summary-item"><div><i class="bi bi-file-earmark-text left-icon"></i> Mục tiêu</div><div class="text-success fw-bold"><i class="bi bi-check-circle"></i> Đạt</div></div>
+                    <div class="summary-item"><div><i class="bi bi-layout-text-sidebar-reverse left-icon"></i> Nội dung</div><div class="text-success fw-bold"><i class="bi bi-check-circle"></i> Đạt</div></div>
+                    <div class="summary-item"><div><i class="bi bi-journal-text left-icon"></i> Tài liệu giảng dạy</div><div><i class="bi bi-paperclip text-primary fs-5" style="transform: rotate(45deg);"></i></div></div>
+                    <div class="summary-item"><div><i class="bi bi-clock-history left-icon"></i> Bài tập chuyên đề</div><div class="text-secondary fw-bold"><i class="bi bi-dash-circle"></i> Chưa nộp</div></div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="lesson-card">
+            <div class="lesson-header collapsed" data-bs-toggle="collapse" data-bs-target="#content-3"><span>BÀI 3: KIỂM THỬ HỘP TRẮNG (WHITE-BOX TESTING)</span><i class="bi bi-chevron-down chevron-icon"></i></div>
+            <div class="collapse" id="content-3">
+                <div class="inner-content">
+                    <div class="content-row"><div class="row-header"><div class="row-title-area"><i class="bi bi-file-earmark-text row-icon"></i><span class="row-title">Mục tiêu</span></div><div class="status-passed"><i class="bi bi-check-circle"></i> Đạt</div></div><div class="row-detail"><ul><li>Kiểm thử dựa trên luồng điều khiển và mã nguồn.</li></ul></div></div>
+                    <div class="content-row"><div class="row-header"><div class="row-title-area"><i class="bi bi-layout-text-window-reverse row-icon"></i><span class="row-title">Nội dung</span></div><div class="status-passed"><i class="bi bi-check-circle"></i> Đạt</div></div><div class="row-detail"><ul><li>Độ bao phủ câu lệnh, bao phủ nhánh.</li></ul></div></div>
+                    <div class="content-row"><div class="row-header"><div class="row-title-area"><i class="bi bi-journal-text row-icon"></i><span class="row-title">Tài liệu giảng dạy</span></div><div><i class="bi bi-paperclip icon-attachment"></i></div></div><div class="row-detail d-flex flex-column"><a href="#" class="doc-link text-primary"><i class="bi bi-filetype-pdf text-danger me-2 fs-5"></i> Slide_Bai3_WhiteBox.pdf</a></div></div>
+                    <div class="content-row"><div class="row-header"><div class="row-title-area"><i class="bi bi-clock-history row-icon"></i><span class="row-title">Bài tập chuyên đề - 16/03/2026 10:00</span></div><div class="status-missing"><i class="bi bi-dash-circle"></i> Chưa nộp</div></div><div class="row-detail"><a href="#" class="doc-link text-primary mt-1"><i class="bi bi-link-45deg me-1 fs-5"></i> Vẽ đồ thị dòng điều khiển</a></div></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="lesson-card">
+            <div class="lesson-header collapsed" data-bs-toggle="collapse" data-bs-target="#content-4"><span>BÀI 4: KIỂM THỬ TÍCH HỢP VÀ HỆ THỐNG</span><i class="bi bi-chevron-down chevron-icon"></i></div>
+            <div class="collapse" id="content-4"><div class="inner-content"><div class="p-4 text-center text-muted">Nội dung chi tiết đang được cập nhật...</div></div></div>
+        </div>
+
+        <div class="lesson-card">
+            <div class="lesson-header collapsed" data-bs-toggle="collapse" data-bs-target="#content-5"><span>BÀI 5: CÁC CHIẾN LƯỢC KIỂM THỬ PHẦN MỀM</span><i class="bi bi-chevron-down chevron-icon"></i></div>
+            <div class="collapse" id="content-5"><div class="inner-content"><div class="p-4 text-center text-muted">Nội dung chi tiết đang được cập nhật...</div></div></div>
+        </div>
+
+        <div class="lesson-card">
+            <div class="lesson-header collapsed" data-bs-toggle="collapse" data-bs-target="#content-6"><span>BÀI 6: TỔNG QUAN KIỂM THỬ TỰ ĐỘNG</span><i class="bi bi-chevron-down chevron-icon"></i></div>
+            <div class="collapse" id="content-6"><div class="inner-content"><div class="p-4 text-center text-muted">Nội dung chi tiết đang được cập nhật...</div></div></div>
+        </div>
+
+        <div class="lesson-card">
+            <div class="lesson-header collapsed" data-bs-toggle="collapse" data-bs-target="#content-7"><span>BÀI 7: THỰC HÀNH CÔNG CỤ KATALON STUDIO</span><i class="bi bi-chevron-down chevron-icon"></i></div>
+            <div class="collapse" id="content-7"><div class="inner-content"><div class="p-4 text-center text-muted">Nội dung chi tiết đang được cập nhật...</div></div></div>
+        </div>
+
+        <div class="lesson-card">
+            <div class="lesson-header collapsed" data-bs-toggle="collapse" data-bs-target="#content-8"><span>BÀI 8: BÁO CÁO LỖI & QUẢN LÝ BUG BẰNG JIRA</span><i class="bi bi-chevron-down chevron-icon"></i></div>
+            <div class="collapse" id="content-8"><div class="inner-content"><div class="p-4 text-center text-muted">Nội dung chi tiết đang được cập nhật...</div></div></div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        var collapsibles = document.querySelectorAll('.collapse');
+        collapsibles.forEach(function (collapsible) {
+            // Khi bảng chi tiết bắt đầu mở
+            collapsible.addEventListener('show.bs.collapse', function () {
+                var card = this.closest('.lesson-card');
+                card.classList.add('active-card');
+                var icon = card.querySelector('.chevron-icon');
+                if(icon) {
+                    icon.classList.remove('bi-chevron-down');
+                    icon.classList.add('bi-chevron-up');
+                }
+            });
+            // Khi bảng chi tiết đóng lại
+            collapsible.addEventListener('hide.bs.collapse', function () {
+                var card = this.closest('.lesson-card');
+                card.classList.remove('active-card');
+                var icon = card.querySelector('.chevron-icon');
+                if(icon) {
+                    icon.classList.remove('bi-chevron-up');
+                    icon.classList.add('bi-chevron-down');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

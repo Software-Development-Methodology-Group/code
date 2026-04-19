@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hội đồng - Xem Báo cáo AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root { 
+            --bg-light: #f4f6f9; 
+            --text-main: #333;
+            --board-theme: #6f42c1; /* Màu tím quyền lực */
+            --board-light: #f4f0fa;
+            --ai-gradient: linear-gradient(45deg, #6f42c1, #0dcaf0);
+        }
+        body { background-color: var(--bg-light); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
+
+        /* --- SIDEBAR CHÍNH --- */
+        .main-sidebar { width: 80px; background: #fff; border-right: 1px solid #dee2e6; height: 100vh; position: fixed; left: 0; top: 0; z-index: 1000; padding-top: 20px; display: flex; flex-direction: column; align-items: center; box-shadow: 2px 0 5px rgba(0,0,0,0.05); }
+        .sidebar-icon { width: 45px; height: 45px; background: #f8f9fa; color: #666; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; transition: 0.3s; margin-bottom: 5px; }
+        .sidebar-icon:hover, .sidebar-icon.active { background: var(--board-theme); color: #fff; box-shadow: 0 4px 8px rgba(111, 66, 193, 0.4); }
+        .sidebar-text { font-size: 11px; margin-bottom: 20px; color: #666; font-weight: 600; text-align: center; }
+
+        /* --- MENU PHỤ CỦA HỘI ĐỒNG --- */
+        .sub-sidebar { width: 280px; background: #fff; height: 100vh; position: fixed; left: 80px; top: 0; border-right: 1px solid #dee2e6; overflow-y: auto; padding-top: 20px;}
+        .board-header { padding: 10px 20px 20px 20px; border-bottom: 1px solid #eee; margin-bottom: 15px; }
+        .sub-menu-item { display: flex; align-items: center; padding: 15px 20px; font-size: 15px; color: var(--text-main); text-decoration: none; font-weight: 500; border-left: 4px solid transparent; transition: 0.2s ease; }
+        .sub-menu-item i { font-size: 1.2rem; margin-right: 15px; color: #555; width: 25px; text-align: center; }
+        .sub-menu-item:hover, .sub-menu-item.active { background: var(--board-light); color: var(--board-theme); }
+        .sub-menu-item:hover i, .sub-menu-item.active i { color: var(--board-theme); }
+        .sub-menu-item.active { font-weight: bold; border-left: 4px solid var(--board-theme); }
+
+        /* --- NỘI DUNG --- */
+        .main-content { margin-left: 360px; padding: 30px 40px; max-width: 1400px; }
+
+        /* MÀN HÌNH LOADING KHI SẾP BẤM VÀO */
+        #aiLoadingScreen {
+            position: fixed; top: 0; left: 360px; width: calc(100% - 360px); height: 100vh;
+            background: rgba(244, 246, 249, 0.95); z-index: 999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .spinner-grow.text-board { color: var(--board-theme); width: 4rem; height: 4rem; }
+
+        #dashboardContent { display: none; animation: fadeIn 0.8s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .ai-title { color: var(--board-theme); font-weight: 800; display: inline-block;}
+        .ai-badge { background: var(--ai-gradient); color: white; font-size: 12px; padding: 4px 10px; border-radius: 20px; margin-left: 10px; vertical-align: middle;}
+
+        /* BỐ CỤC CARD */
+        .stat-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #dee2e6; display: flex; align-items: center; }
+        .stat-icon { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin-right: 20px; }
+        .analysis-card { background: #fff; border-radius: 12px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #dee2e6; height: 100%;}
+        .analysis-title { font-weight: 700; color: #444; margin-bottom: 20px; border-bottom: 2px solid #f4f6f9; padding-bottom: 10px; font-size: 16px; text-transform: uppercase;}
+        
+        .insight-box { border-left: 4px solid #dc3545; background-color: #fff8f8; padding: 15px 20px; border-radius: 0 8px 8px 0; margin-bottom: 15px; }
+        .insight-box.warning { border-left-color: #ffc107; background-color: #fffdf5; }
+        .insight-title { font-weight: bold; font-size: 15px; margin-bottom: 5px; display: flex; align-items: center;}
+        .insight-title i { margin-right: 8px; font-size: 18px; }
+        
+        .action-list { list-style: none; padding: 0; margin: 0; }
+        .action-list li { background: #f8f9fa; border: 1px solid #e9ecef; padding: 12px 15px; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: flex-start; font-size: 14.5px; color: #333;}
+        .action-list li i { color: var(--board-theme); font-size: 20px; margin-right: 12px; margin-top: -2px;}
+
+        /* Nút dành riêng cho Sếp */
+        .btn-board { background-color: var(--board-theme); color: white; border: none; transition: 0.3s; margin-left: 5px;}
+        .btn-board:hover { background-color: #59339d; color: white; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(111, 66, 193, 0.3);}
+    </style>
+</head>
+<body>
+    
+    <div class="main-sidebar">
+        <div class="d-flex flex-column align-items-center"><a href="lichgiangday.html" class="text-decoration-none text-dark d-flex flex-column align-items-center"><div class="sidebar-icon"><i class="bi bi-person-video3"></i></div><div class="sidebar-text">Giảng viên</div></a></div>
+        <div class="d-flex flex-column align-items-center"><a href="khaothi-dashboard.html" class="text-decoration-none text-dark d-flex flex-column align-items-center"><div class="sidebar-icon"><i class="bi bi-clipboard-check"></i></div><div class="sidebar-text">Khảo thí</div></a></div>
+        <div class="d-flex flex-column align-items-center"><a href="hoidong-pheduyet.html" class="text-decoration-none d-flex flex-column align-items-center"><div class="sidebar-icon active"><i class="bi bi-people-fill"></i></div><div class="sidebar-text" style="color: var(--board-theme);">Hội đồng</div></a></div>
+         <div class="d-flex flex-column align-items-center">
+            <a href="hethong-dashboard.html" class="text-decoration-none text-dark d-flex flex-column align-items-center">
+                <div class="sidebar-icon"><i class="bi bi-gear"></i></div>
+                <div class="sidebar-text">Hệ thống</div>
+            </a>
+        </div>
+    </div>
+
+    <div class="sub-sidebar">
+        <div class="board-header">
+            <h5 class="fw-bold text-dark mb-1">Cổng Ban Giám Hiệu</h5>
+            <span class="badge bg-secondary">Quản trị cấp cao</span>
+        </div>
+        <a href="hoidong-pheduyet.html" class="sub-menu-item"><i class="bi bi-file-earmark-check"></i> Duyệt CT Đào tạo</a>
+        <a href="hoidong-aianalysis.html" class="sub-menu-item active"><i class="bi bi-robot"></i> Báo cáo AI & Đề xuất</a>
+        <a href="hoidong-baocao.html" class="sub-menu-item"><i class="bi bi-file-bar-graph"></i> Báo cáo tổng hợp</a>
+    </div>
+
+    <div id="aiLoadingScreen">
+        <div class="spinner-grow text-board" role="status"></div>
+        <h4 class="fw-bold mt-3" style="color: var(--board-theme);">Đang tải Báo cáo từ Phòng Khảo Thí...</h4>
+        <p class="text-muted">Hệ thống đang đồng bộ dữ liệu đồ thị PLO...</p>
+    </div>
+
+    <div class="main-content" id="dashboardContent">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold mb-1 ai-title">Xem xét Đề xuất Cải tiến Chất lượng Đào tạo</h3>
+                <span class="ai-badge"><i class="bi bi-stars"></i> Trình lên từ: Phòng Khảo Thí</span>
+                <p class="text-muted mb-0 mt-1">Kỳ học: 1 | Năm học: 2025 - 2026 <br> Quy mô phân tích: 120 Lớp học phần</p>
+            </div>
+            
+            <button class="btn btn-outline-secondary fw-bold px-4 shadow-sm" onclick="showToast('Đã tải xuống file PDF thành công!', 'bg-secondary', 'bi-download')" style="font-size: 14px; padding: 5px !important; margin-top: 20px;">
+                <i class="bi bi-printer me-2"></i> In Báo Cáo
+            </button>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #e6f8f0; color: #198754;"><i class="bi bi-check-circle"></i></div>
+                    <div><h3 class="fw-bold mb-0">82.5%</h3><span class="text-muted">Tỷ lệ sinh viên Đạt</span></div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #fff3cd; color: #ffc107;"><i class="bi bi-exclamation-triangle"></i></div>
+                    <div><h3 class="fw-bold mb-0">450</h3><span class="text-muted">SV rơi vào cảnh báo học vụ</span></div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #f8d7da; color: #dc3545;"><i class="bi bi-graph-down-arrow"></i></div>
+                    <div><h3 class="fw-bold mb-0">LTM02</h3><span class="text-muted">Học phần có tỷ lệ rớt cao nhất (35%)</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4 g-4">
+            <div class="col-md-5">
+                <div class="analysis-card">
+                    <div class="analysis-title"><i class="bi bi-radar me-2"></i> Đánh giá Chuẩn đầu ra (PLO) Toàn Khóa</div>
+                    <canvas id="ploChart" height="280"></canvas>
+                </div>
+            </div>
+            <div class="col-md-7">
+                <div class="analysis-card">
+                    <div class="analysis-title"><i class="bi bi-bar-chart-fill me-2"></i> Tương quan Điểm Quá trình vs Điểm Final</div>
+                    <canvas id="correlationChart" height="180"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="analysis-card border-danger" style="border-width: 2px;">
+                    <div class="analysis-title text-danger"><i class="bi bi-search me-2"></i> Vấn đề Khảo thí chỉ ra</div>
+                    
+                    <div class="insight-box">
+                        <div class="insight-title text-danger"><i class="bi bi-exclamation-octagon-fill"></i> Môn Lập trình mạng (LTM02)</div>
+                        <p class="insight-desc">Phát hiện sự chênh lệch lớn: Điểm quá trình trung bình <strong>8.2</strong>, điểm Final chỉ <strong>4.1</strong>. Đề thi Final đang quá khó hoặc nội dung giảng dạy chưa bám sát chuẩn đầu ra.</p>
+                    </div>
+                    <div class="insight-box warning">
+                        <div class="insight-title text-warning text-dark"><i class="bi bi-shield-exclamation"></i> Chuẩn đầu ra PLO-3 (Làm việc nhóm)</div>
+                        <p class="insight-desc">Chỉ đạt <strong>65%</strong> so với mục tiêu 85%. Chấm điểm bài tập nhóm đang quá khắt khe ở bộ môn CSDL.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="analysis-card" style="border: 2px solid var(--board-theme); background-color: #fcfaff;">
+                    <div class="analysis-title" style="color: var(--board-theme);"><i class="bi bi-envelope-paper-fill me-2"></i> Đề xuất từ Phòng Đào tạo & Khảo thí</div>
+                    
+                    <ul class="action-list">
+                        <li>
+                            <i class="bi bi-1-circle-fill"></i>
+                            <div>
+                                <strong>Tinh chỉnh Syllabus môn Lập trình mạng:</strong>
+                                <br>Kiến nghị bổ sung 2 buổi Lab thực hành cấu hình Router thực tế vào giữa kỳ học.
+                            </div>
+                        </li>
+                        <li>
+                            <i class="bi bi-2-circle-fill"></i>
+                            <div>
+                                <strong>Thay đổi phương pháp đánh giá PLO-3:</strong>
+                                <br>Tổ chức Workshop tập huấn cho Giảng viên. Áp dụng đánh giá chéo (Peer-review).
+                            </div>
+                        </li>
+                    </ul>
+
+                    <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
+                        <button class="btn btn-outline-danger fw-bold" onclick="showToast('Đã yêu cầu Phòng Khảo thí làm rõ thêm số liệu!', 'bg-danger', 'bi-x-circle')" style="font-size: 14px;">
+                            <i class="bi bi-arrow-return-left"></i> Yêu cầu giải trình
+                        </button>
+                        
+                        <button class="btn btn-board fw-bold px-4 py-2" onclick="showToast('Đã phê duyệt! Hệ thống sẽ gửi thông báo chỉ đạo xuống các Trưởng bộ môn.', 'bg-success', 'bi-check2-all')"  style="font-size: 14px;">
+                            <i class="bi bi-pen-fill me-2"></i> Phê duyệt & Ban hành chỉ đạo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container position-fixed top-0 end-0 p-4" style="z-index: 1060;">
+        <div id="actionToast" class="toast align-items-center text-white border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body fw-bold fs-6" id="toastMessage">Thông báo</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showToast(msg, typeClass, iconClass) {
+            let toastEl = document.getElementById('actionToast');
+            toastEl.className = `toast align-items-center text-white border-0 ${typeClass}`;
+            document.getElementById('toastMessage').innerHTML = `<i class="bi ${iconClass} me-2 fs-5"></i> ` + msg;
+            new bootstrap.Toast(toastEl).show();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                document.getElementById('aiLoadingScreen').style.display = 'none';
+                document.getElementById('dashboardContent').style.display = 'block';
+                initCharts(); 
+            }, 1500); 
+        });
+
+        function initCharts() {
+            const ctxPlo = document.getElementById('ploChart').getContext('2d');
+            new Chart(ctxPlo, {
+                type: 'radar',
+                data: {
+                    labels: ['PLO1: Kiến thức cốt lõi', 'PLO2: Kỹ năng chuyên môn', 'PLO3: Làm việc nhóm', 'PLO4: Giải quyết vấn đề', 'PLO5: Giao tiếp'],
+                    datasets: [{ label: 'Mục tiêu đề ra (%)', data: [90, 85, 85, 80, 90], backgroundColor: 'rgba(13, 110, 253, 0.2)', borderColor: 'rgba(13, 110, 253, 1)', pointBackgroundColor: 'rgba(13, 110, 253, 1)', }, 
+                    { label: 'Đạt được thực tế (%)', data: [88, 82, 65, 85, 89], backgroundColor: 'rgba(111, 66, 193, 0.4)', borderColor: 'rgba(111, 66, 193, 1)', pointBackgroundColor: 'rgba(111, 66, 193, 1)', }]
+                },
+                options: { responsive: true, scales: { r: { angleLines: { display: true }, suggestedMin: 50, suggestedMax: 100 } } }
+            });
+
+            const ctxCorr = document.getElementById('correlationChart').getContext('2d');
+            new Chart(ctxCorr, {
+                type: 'bar',
+                data: {
+                    labels: ['Kiểm thử phần mềm', 'LTM02', 'Cơ sở dữ liệu', 'Trí tuệ nhân tạo', 'Thiết kế Web'],
+                    datasets: [
+                        { label: 'TB Điểm Quá trình', data: [8.5, 8.2, 7.5, 8.0, 7.8], backgroundColor: '#0dcaf0', borderRadius: 4 },
+                        { label: 'TB Điểm Final', data: [8.0, 4.1, 7.0, 7.5, 7.2], backgroundColor: '#dc3545', borderRadius: 4 }
+                    ]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true, max: 10 } } }
+            });
+        }
+    </script>
+</body>
+</html>

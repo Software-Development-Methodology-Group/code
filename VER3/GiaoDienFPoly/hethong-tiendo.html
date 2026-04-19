@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống - Tiến độ Đào tạo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root { 
+            --bg-light: #f4f6f9; 
+            --text-main: #333;
+            --admin-theme: #10b981; 
+            --admin-light: #ecfdf5;
+        }
+        body { background-color: var(--bg-light); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; overflow-x: hidden; font-size: 14px; color: var(--text-main);}
+
+        /* --- SIDEBAR CHÍNH --- */
+        .main-sidebar { width: 80px; background: #fff; border-right: 1px solid #dee2e6; height: 100vh; position: fixed; left: 0; top: 0; z-index: 1000; padding-top: 20px; display: flex; flex-direction: column; align-items: center; box-shadow: 2px 0 5px rgba(0,0,0,0.05); }
+        .sidebar-icon { width: 45px; height: 45px; background: #f8f9fa; color: #666; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; transition: 0.3s; margin-bottom: 5px; }
+        .sidebar-icon:hover, .sidebar-icon.active { background: var(--admin-theme); color: #fff; box-shadow: 0 4px 8px rgba(16, 185, 129, 0.4); }
+        .sidebar-text { font-size: 11px; margin-bottom: 20px; color: #666; font-weight: 600; text-align: center; }
+
+        /* --- MAIN CONTENT (Đã bỏ Menu Phụ, margin-left chỉ còn 80px) --- */
+        .main-content { margin-left: 80px; padding: 25px 40px; animation: fadeIn 0.4s ease;}
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- PANEL CẤU HÌNH & BỘ LỌC --- */
+        .config-panel { background: #fff; border-radius: 8px; padding: 20px; border: 1px solid #e8e8e8; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; box-shadow: 0 2px 8px rgba(0,0,0,0.02);}
+        .config-item { display: flex; flex-direction: column; gap: 5px; }
+        .config-item label { font-size: 12px; color: #888; font-weight: 600; text-transform: uppercase;}
+        .form-control, .form-select { font-size: 14px; border-color: #d9d9d9; }
+        .form-control:focus, .form-select:focus { border-color: var(--admin-theme); box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.25); }
+        
+        /* --- BẢNG CỌ VẼ (BRUSH PALETTE) --- */
+        .brush-panel { margin-bottom: 15px; }
+        .brush-btn { 
+            border: 1px solid #d9d9d9; border-radius: 6px; padding: 6px 15px; font-weight: 600; font-size: 13px;
+            cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; color: #fff;
+            user-select: none; margin-right: 10px; margin-bottom: 10px;
+        }
+        .brush-btn.active { border: 2px solid #000; transform: scale(1.05); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        .brush-btn i.delete-label { font-size: 12px; color: rgba(255,255,255,0.7); transition: 0.2s;}
+        .brush-btn i.delete-label:hover { color: white; transform: scale(1.2);}
+
+        /* --- BẢNG GRID 52 TUẦN --- */
+        .table-container { background: #fff; border-radius: 8px; border: 1px solid #e8e8e8; overflow-x: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+        .progress-table { width: max-content; margin-bottom: 0; border-collapse: collapse; }
+        .progress-table th, .progress-table td { border: 1px solid #e8e8e8; padding: 0; text-align: center; vertical-align: middle; }
+        
+        /* Cột Khóa luôn cố định bên trái (Sticky) */
+        .progress-table th.sticky-col, .progress-table td.sticky-col { 
+            position: sticky; left: 0; background: #fff; z-index: 2; width: 150px; text-align: left; padding: 0 15px; 
+            border-right: 2px solid #ddd; font-weight: bold;
+        }
+        .progress-table thead th.sticky-col { z-index: 3; background: #fafafa;}
+
+        /* Header Tháng và Tuần */
+        .month-header { background: #fafafa; font-size: 12px; font-weight: 600; padding: 5px 0; color: #555;}
+        .week-header { font-size: 10px; line-height: 1.2; padding: 4px 2px; min-width: 32px; background: #fff;}
+        .week-header .wk-num { color: #0d6efd; font-weight: bold; }
+        .week-header .wk-date { color: #888; }
+
+        /* Ô lưới (Cell) để vẽ */
+        .grid-cell { 
+            height: 36px; width: 32px; cursor: cell; user-select: none; font-size: 13px; font-weight: bold;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .grid-cell:hover { outline: 2px solid rgba(0,0,0,0.5); outline-offset: -2px; z-index: 1;}
+
+        /* Cảnh báo */
+        .alert-custom { border-left: 4px solid #0d6efd; background: #e6f7ff; padding: 12px 20px; border-radius: 6px; margin-bottom: 20px;}
+
+    </style>
+</head>
+<body>
+    
+    <div class="main-sidebar">
+        <div class="d-flex flex-column align-items-center"><a href="lichgiangday.html" class="text-decoration-none text-dark d-flex flex-column align-items-center"><div class="sidebar-icon"><i class="bi bi-person-video3"></i></div><div class="sidebar-text">Giảng viên</div></a></div>
+        <div class="d-flex flex-column align-items-center"><a href="khaothi-dashboard.html" class="text-decoration-none text-dark d-flex flex-column align-items-center"><div class="sidebar-icon"><i class="bi bi-clipboard-check"></i></div><div class="sidebar-text">Khảo thí</div></a></div>
+        <div class="d-flex flex-column align-items-center"><a href="hoidong-pheduyet.html" class="text-decoration-none text-dark d-flex flex-column align-items-center"><div class="sidebar-icon"><i class="bi bi-people-fill"></i></div><div class="sidebar-text">Hội đồng</div></a></div>
+        <div class="d-flex flex-column align-items-center"><a href="hethong-dashboard.html" class="text-decoration-none d-flex flex-column align-items-center"><div class="sidebar-icon active"><i class="bi bi-gear-fill"></i></div><div class="sidebar-text" style="color: var(--admin-theme);">Hệ thống</div></a></div>
+    </div>
+
+    <div class="main-content">
+        
+        <div class="d-flex align-items-center mb-3">
+            <a href="hethong-dashboard.html" class="btn btn-sm btn-light border text-dark fw-bold me-3 shadow-sm"><i class="bi bi-arrow-left me-1"></i> Quay lại Dashboard</a>
+            <h4 class="fw-bold mb-0 text-uppercase" style="color: #222;">Kế hoạch Đào tạo Năm học</h4>
+        </div>
+
+        <div class="alert-custom d-flex align-items-center justify-content-between shadow-sm">
+            <div>
+                <strong class="text-primary"><i class="bi bi-info-circle-fill me-2"></i> Yêu cầu Quỹ thời gian từ Khung CTĐT (Mức trần 70 tiết/tuần):</strong>
+                <div class="d-flex gap-4 mt-2">
+                    <span><span class="badge bg-info text-dark">HỌC KỲ 1</span> Cần tối thiểu <b class="text-danger fs-6">15</b> tuần.</span>
+                    <span><span class="badge bg-primary">HỌC KỲ 2</span> Cần tối thiểu <b class="text-danger fs-6">15</b> tuần.</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="config-panel">
+            <div class="config-item">
+                <label>Năm học</label>
+                <input type="text" class="form-control fw-bold" value="2025-2026" style="width: 120px;">
+            </div>
+            <div class="config-item">
+                <label>Khóa học (Từ - Đến)</label>
+                <div class="input-group" style="width: 180px;">
+                    <span class="input-group-text bg-light">K</span>
+                    <input type="number" class="form-control" value="20" id="startK">
+                    <span class="input-group-text bg-light">-</span>
+                    <input type="number" class="form-control" value="24" id="endK">
+                </div>
+            </div>
+            <div class="config-item">
+                <label>Bắt đầu đánh số tuần</label>
+                <input type="date" class="form-control" value="2025-08-04">
+            </div>
+            
+            <button class="btn btn-primary fw-bold ms-2" onclick="generateTable()"><i class="bi bi-arrow-clockwise me-1"></i> Cập nhật Bảng</button>
+
+            <div class="ms-auto d-flex gap-2">
+                <button class="btn btn-outline-danger fw-bold"><i class="bi bi-file-pdf-fill me-1"></i> Xuất PDF</button>
+                <button class="btn btn-outline-secondary fw-bold" onclick="showToast('Đã lưu bản nháp!', 'bg-secondary')"><i class="bi bi-save-fill me-1"></i> Lưu Nháp</button>
+                <button class="btn btn-success fw-bold" onclick="submitProgress()"><i class="bi bi-send-check-fill me-1"></i> Trình Phê Duyệt</button>
+            </div>
+        </div>
+
+        <div class="brush-panel">
+            <p class="fw-bold mb-2 text-dark"><i class="bi bi-paint-bucket me-2 text-primary"></i> Ghi chú & Chọn cọ vẽ (Kéo chuột để tô mảng):</p>
+            <div id="paletteContainer" class="d-flex flex-wrap">
+                </div>
+        </div>
+
+        <div class="table-container">
+            <table class="progress-table" id="progressGrid">
+                </table>
+        </div>
+
+    </div>
+
+    <div class="toast-container position-fixed top-0 end-0 p-4" style="z-index: 1060;">
+        <div id="actionToast" class="toast align-items-center text-white border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body fw-bold fs-6" id="toastMsg">Thông báo</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showToast(msg, typeClass) {
+            let toastEl = document.getElementById('actionToast');
+            toastEl.className = `toast align-items-center text-white border-0 ${typeClass}`;
+            document.getElementById('toastMsg').innerHTML = msg;
+            new bootstrap.Toast(toastEl).show();
+        }
+
+        // ==========================================
+        // CẤU HÌNH DỮ LIỆU & TRẠNG THÁI
+        // ==========================================
+        const labels = [
+            { code: 'HK1', name: 'Học kỳ 1 (LT)', bg: '#0dcaf0', text: '#000', isAutoNum: true },
+            { code: 'HK2', name: 'Học kỳ 2 (LT)', bg: '#0d6efd', text: '#fff', isAutoNum: true },
+            { code: 'T', name: 'Tuần Thi', bg: '#dc3545', text: '#fff', isAutoNum: false },
+            { code: 'TT', name: 'Thực tập', bg: '#6f42c1', text: '#fff', isAutoNum: false },
+            { code: 'N', name: 'Nghỉ Lễ/Tết', bg: '#ffc107', text: '#000', isAutoNum: false },
+            { code: 'DEL', name: 'Cục tẩy (Xóa)', bg: '#e9ecef', text: '#333', isAutoNum: false }
+        ];
+
+        let activeBrush = 'HK1'; // Mặc định chọn cọ HK1
+        let isPainting = false; // Trạng thái giữ chuột
+        let tableData = []; // Lưu trữ mảng dữ liệu các dòng
+        const WEEKS_COUNT = 52; // Tổng số tuần 1 năm
+
+        // ==========================================
+        // KHỞI TẠO GIAO DIỆN
+        // ==========================================
+        window.onload = () => {
+            renderPalette();
+            generateTable();
+        };
+
+        // Render bộ nút cọ vẽ
+        function renderPalette() {
+            const container = document.getElementById('paletteContainer');
+            container.innerHTML = '';
+            labels.forEach(label => {
+                const btn = document.createElement('div');
+                btn.className = `brush-btn ${activeBrush === label.code ? 'active' : ''}`;
+                btn.style.backgroundColor = label.bg;
+                btn.style.color = label.text;
+                btn.innerHTML = `<span class="fs-6">${label.code}</span>: ${label.name}`;
+                
+                // Sự kiện đổi cọ
+                btn.onclick = () => {
+                    activeBrush = label.code;
+                    document.querySelectorAll('.brush-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                };
+                container.appendChild(btn);
+            });
+            // Thêm nút "+" giả lập
+            const addBtn = document.createElement('div');
+            addBtn.className = 'brush-btn bg-white text-dark border-dashed';
+            addBtn.style.borderStyle = 'dashed';
+            addBtn.innerHTML = `<i class="bi bi-plus-circle"></i> Thêm nhãn`;
+            addBtn.onclick = () => alert("Mở form thêm nhãn màu mới...");
+            container.appendChild(addBtn);
+        }
+
+        // Khởi tạo cấu trúc bảng (Thead & Data rỗng)
+        function generateTable() {
+            const startK = parseInt(document.getElementById('startK').value) || 20;
+            const endK = parseInt(document.getElementById('endK').value) || 24;
+            
+            // Xây dựng thead
+            let table = document.getElementById('progressGrid');
+            let theadHtml = `
+                <thead>
+                    <tr>
+                        <th class="sticky-col" rowspan="2" style="background:#f4f6f9;">TÊN KHÓA HỌC</th>
+            `;
+            
+            // Giả lập chia 52 tuần thành các tháng (mỗi tháng ~4-5 tuần)
+            let months = ['Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12', 'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7'];
+            let weeksPerMonth = [4, 4, 5, 4, 5, 4, 4, 5, 4, 4, 5, 4]; // Tổng = 52
+            
+            // Render dòng Tháng
+            weeksPerMonth.forEach((wCount, index) => {
+                theadHtml += `<th class="month-header" colspan="${wCount}">${months[index]}</th>`;
+            });
+            theadHtml += `</tr><tr>`;
+            
+            // Render dòng Số thứ tự Tuần (T1 -> T52)
+            for(let i = 1; i <= WEEKS_COUNT; i++) {
+                theadHtml += `
+                    <th class="week-header">
+                        <div class="wk-num">T${i}</div>
+                    </th>
+                `;
+            }
+            theadHtml += `</tr></thead><tbody id="gridBody"></tbody>`;
+            table.innerHTML = theadHtml;
+
+            // Khởi tạo Data cho các Khóa
+            tableData = [];
+            for(let k = startK; k <= endK; k++) {
+                tableData.push({
+                    id: `K${k}`,
+                    name: `Khóa K${k} (CQ)`,
+                    cells: new Array(WEEKS_COUNT).fill('')
+                });
+            }
+            
+            renderRows();
+            showToast('<i class="bi bi-table me-2"></i> Đã tạo lưới tiến độ 52 tuần!', 'bg-primary');
+        }
+
+        // ==========================================
+        // LOGIC RENDER ROWS & AUTO-NUMBERING
+        // ==========================================
+        function renderRows() {
+            const tbody = document.getElementById('gridBody');
+            tbody.innerHTML = '';
+
+            tableData.forEach((row, rowIndex) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td class="sticky-col text-primary">${row.name}</td>`;
+                
+                // Đếm số tuần học kỳ để đánh số động (Ví dụ: T1, T2, T3)
+                let hk1Count = 0;
+                let hk2Count = 0;
+
+                for(let colIndex = 0; colIndex < WEEKS_COUNT; colIndex++) {
+                    const cellVal = row.cells[colIndex];
+                    const td = document.createElement('td');
+                    const innerDiv = document.createElement('div');
+                    innerDiv.className = 'grid-cell';
+                    
+                    // Xử lý hiển thị màu và chữ
+                    if(cellVal !== '') {
+                        const labelDef = labels.find(l => l.code === cellVal);
+                        if(labelDef) {
+                            innerDiv.style.backgroundColor = labelDef.bg;
+                            innerDiv.style.color = labelDef.text;
+                            
+                            // Nếu là nhãn HK (Học kỳ) thì hiển thị số đếm tăng dần
+                            if(labelDef.isAutoNum) {
+                                if(cellVal === 'HK1') { hk1Count++; innerDiv.innerText = hk1Count; }
+                                if(cellVal === 'HK2') { hk2Count++; innerDiv.innerText = hk2Count; }
+                            } else {
+                                // Nếu không thì hiển thị mã chữ (T, TT, N...)
+                                innerDiv.innerText = labelDef.code;
+                            }
+                        }
+                    }
+
+                    // Gắn sự kiện kéo thả chuột để tô màu
+                    td.appendChild(innerDiv);
+                    td.onmousedown = (e) => startPainting(rowIndex, colIndex, e);
+                    td.onmouseenter = (e) => paintOnHover(rowIndex, colIndex, e);
+                    
+                    tr.appendChild(td);
+                }
+                tbody.appendChild(tr);
+            });
+        }
+
+        // ==========================================
+        // LOGIC TÔ MÀU (DRAG TO PAINT)
+        // ==========================================
+        // Dừng tô khi nhả chuột ở bất kỳ đâu trên màn hình
+        window.addEventListener('mouseup', () => { isPainting = false; });
+
+        function startPainting(rowIndex, colIndex, e) {
+            e.preventDefault(); // Ngăn highlight text
+            isPainting = true;
+            applyToolToCell(rowIndex, colIndex);
+        }
+
+        function paintOnHover(rowIndex, colIndex, e) {
+            if (isPainting) {
+                applyToolToCell(rowIndex, colIndex);
+            }
+        }
+
+        function applyToolToCell(rowIndex, colIndex) {
+            const valToSet = activeBrush === 'DEL' ? '' : activeBrush;
+            
+            // Nếu giá trị không đổi thì bỏ qua để tối ưu hiệu suất
+            if(tableData[rowIndex].cells[colIndex] === valToSet) return;
+            
+            // Cập nhật mảng Data
+            tableData[rowIndex].cells[colIndex] = valToSet;
+            
+            // Render TẤT CẢ lại để hàm đếm số tự động nhảy đúng (Chỉ render UI, rất nhanh)
+            renderRows();
+        }
+
+        // ==========================================
+        // TRÌNH PHÊ DUYỆT (VALIDATION)
+        // ==========================================
+        function submitProgress() {
+            let errorMsg = null;
+            // Ép theo cảnh báo ở trên: HK1 và HK2 phải đủ 15 tuần
+            
+            for(let row of tableData) {
+                let hk1Count = row.cells.filter(c => c === 'HK1').length;
+                let hk2Count = row.cells.filter(c => c === 'HK2').length;
+                
+                if (hk1Count > 0 && hk1Count < 15) {
+                    errorMsg = `Dòng <b>${row.name}</b> chưa đủ số tuần Học kỳ 1. <br>Yêu cầu: 15. Thực tế bạn mới bôi: ${hk1Count}.`;
+                    break;
+                }
+                if (hk2Count > 0 && hk2Count < 15) {
+                    errorMsg = `Dòng <b>${row.name}</b> chưa đủ số tuần Học kỳ 2. <br>Yêu cầu: 15. Thực tế bạn mới bôi: ${hk2Count}.`;
+                    break;
+                }
+            }
+
+            if(errorMsg) {
+                // Hiển thị Alert đỏ
+                document.querySelector('.alert-custom').className = 'alert-custom bg-danger text-white shadow-sm mb-4';
+                document.querySelector('.alert-custom').innerHTML = `<i class="bi bi-exclamation-triangle-fill me-2"></i> <strong>LỖI LOGIC:</strong> ${errorMsg}`;
+                showToast('<i class="bi bi-x-circle-fill me-2"></i> Lỗi dữ liệu tiến độ. Trình phê duyệt thất bại!', 'bg-danger');
+            } else {
+                document.querySelector('.alert-custom').className = 'alert-custom bg-success text-white shadow-sm mb-4';
+                document.querySelector('.alert-custom').innerHTML = `<i class="bi bi-check-circle-fill me-2"></i> <strong>HỢP LỆ:</strong> Dữ liệu đạt chuẩn quy chế thời gian!`;
+                showToast('<i class="bi bi-send-check-fill me-2"></i> Đã trình bản Tiến độ lên Ban Giám Hiệu!', 'bg-success');
+            }
+        }
+    </script>
+</body>
+</html>

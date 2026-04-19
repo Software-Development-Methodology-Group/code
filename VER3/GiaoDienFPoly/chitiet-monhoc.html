@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết Môn học</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="/images/logo.png">
+    <style>
+        :root { 
+            --primary-orange: #f36f21; 
+            --primary-light: #fff5ec; 
+            --bg-light: #f4f6f9; 
+        }
+        body { background-color: var(--bg-light); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
+
+        /* --- SIDEBAR CHÍNH --- */
+        .main-sidebar { width: 80px; background: #fff; border-right: 1px solid #dee2e6; height: 100vh; position: fixed; left: 0; top: 0; z-index: 1000; padding-top: 20px; display: flex; flex-direction: column; align-items: center; box-shadow: 2px 0 5px rgba(0,0,0,0.05); }
+        .sidebar-icon { width: 45px; height: 45px; background: #f8f9fa; color: #666; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; transition: 0.3s; margin-bottom: 5px; }
+        .sidebar-icon:hover { background: var(--primary-orange); color: #fff; box-shadow: 0 4px 8px rgba(243, 111, 33, 0.4); }
+        .sidebar-text { font-size: 11px; margin-bottom: 20px; color: #666; font-weight: 600; text-align: center; }
+
+        /* --- SIDEBAR PHỤ (MENU CHỨC NĂNG MÔN HỌC) --- */
+        .sub-sidebar { 
+            width: 200px; 
+            background: #fff; 
+            height: 100vh; 
+            position: fixed; 
+            left: 80px; 
+            top: 0; 
+            border-right: 1px solid #c9c9c9; 
+            overflow-y: auto;
+        }
+
+        .course-header {
+            padding: 25px 20px 15px 20px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 15px;
+        }
+
+        .sub-menu-item { 
+            display: flex; 
+            align-items: center;
+            padding: 10px 15px; 
+            font-size: 13px; 
+            color: #333; 
+            text-decoration: none; 
+            font-weight: 500; 
+            border-left: 4px solid transparent; 
+            transition: 0.2s ease; 
+        }
+        
+        .sub-menu-item i {
+            font-size: 1.2rem;
+            margin-right: 15px;
+            color: #555;
+            width: 25px;
+            text-align: center;
+        }
+
+        .sub-menu-item:hover { color: var(--primary-orange); background: var(--primary-light); }
+        .sub-menu-item:hover i { color: var(--primary-orange); }
+
+        .sub-menu-item.active { background: var(--primary-light); color: var(--primary-orange); font-weight: bold; border-left: 4px solid var(--primary-orange); }
+        .sub-menu-item.active i { color: var(--primary-orange); }
+
+        /* --- NỘI DUNG CHÍNH --- */
+        .main-content { margin-left: 360px; padding: 40px; }
+    </style>
+</head>
+<body>
+    
+    <div class="main-sidebar">
+        <div class="d-flex flex-column align-items-center"><div class="sidebar-icon"><i class="bi bi-person-video3"></i></div><div class="sidebar-text">Giảng viên</div></div>
+<div class="d-flex flex-column align-items-center">
+            <a href="khaothi-dashboard.html" class="text-decoration-none text-dark d-flex flex-column align-items-center">
+                <div class="sidebar-icon"><i class="bi bi-clipboard-check"></i></div>
+                <div class="sidebar-text">Khảo thí</div>
+            </a>
+        </div>        
+ <div class="d-flex flex-column align-items-center">
+            <a href="hoidong-pheduyet.html" class="text-decoration-none text-dark d-flex flex-column align-items-center">
+                           <div class="sidebar-icon"><i class="bi bi-people"></i></div><div class="sidebar-text">Hội đồng</div>
+
+            </a>
+             <div class="d-flex flex-column align-items-center">
+                    <a href="hethong-dashboard.html" class="text-decoration-none text-dark d-flex flex-column align-items-center">
+                        <div class="sidebar-icon"><i class="bi bi-gear"></i></div>
+                        <div class="sidebar-text">Hệ thống</div>
+                    </a>
+                </div>        
+                <div class="d-flex flex-column align-items-center mt-auto mb-3"> <a href="../dangnhap/dangnhap.html" class="text-decoration-none text-dark d-flex flex-column align-items-center">
+            <div class="sidebar-icon"><i class="bi bi-box-arrow-right"></i></div>
+            <div class="sidebar-text" onclick="xulyDangxuat()">Đăng xuất</div>
+        </a></div>
+    </div>
+
+    <div class="sub-sidebar">
+        
+        <div class="course-header">
+            <a href="lophocphan.html" class="text-decoration-none text-dark d-inline-block mb-3" style="font-size: 14px;">
+                <i class="bi bi-arrow-left"></i> Quay lại danh sách
+            </a>
+            <h4 class="fw-bold text-dark mb-1">Dự án mẫu (FPoly)</h4>
+            <span class="badge bg-warning text-dark">Java 5</span>
+        </div>
+
+        <a href="thongtinlophoc.html" class="sub-menu-item">
+         <i class="bi bi-info-circle"></i> Thông tin lớp học
+        </a>
+        <a href="noidunggiangday.html" class="sub-menu-item">
+            <i class="bi bi-book"></i> Nội dung giảng dạy
+        </a>
+        <a href="quanlydiem.html" class="sub-menu-item">
+            <i class="bi bi-journal-check"></i> Quản lý điểm
+        </a>
+        
+        <a href="thongbao.html" class="sub-menu-item">
+            <i class="bi bi-bell"></i> Thông báo
+        </a>
+        <a href="diemdanh.html" class="sub-menu-item">
+            <i class="bi bi-calendar2-check"></i> Bảng điểm danh
+        </a>
+    </div>
+
+    <div class="main-content">
+        <h2 class="fw-bold mb-4">Chi tiết lớp học phần</h2>
+        
+        <div class="card border-0 shadow-sm p-4">
+            <p class="text-muted mb-0">Vui lòng chọn chức năng bên thanh menu để tiếp tục.</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

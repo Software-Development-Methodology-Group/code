@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch giảng dạy (FPoly Style)</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+
+    <style>
+        /* --- CẤU HÌNH MÀU SẮC (CAM FPOLY) --- */
+        :root {
+            --primary-color: #f36f21; /* Cam FPoly */
+            --bg-light: #f4f6f9;      /* Nền xám nhạt */
+            --text-dark: #333;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0; padding: 0;
+        }
+
+        /* --- SIDEBAR TRÁI (ICON) --- */
+        .main-sidebar {
+            width: 80px;
+            background-color: #fff;
+            border-right: 1px solid #dee2e6;
+            height: 100vh;
+            position: fixed;
+            left: 0; top: 0;
+            z-index: 1000;
+            padding-top: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        .sidebar-icon {
+            width: 45px; height: 45px;
+            background-color: #f8f9fa;
+            color: #666;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; cursor: pointer; transition: 0.3s;
+            margin-bottom: 5px;
+        }
+
+        /* Hover vào icon ra màu cam */
+        .sidebar-icon:hover, .sidebar-icon.active {
+            background-color: #f36f21;
+            color: #fff;
+            box-shadow: 0 4px 8px rgba(243, 111, 33, 0.4);
+        }
+
+        .sidebar-text {
+            font-size: 11px; margin-bottom: 20px;
+            color: #666; font-weight: 600; text-align: center;
+        }
+
+        /* --- SIDEBAR PHỤ (MENU CHỮ) --- */
+        .sub-sidebar {
+            width: 200px;
+            background-color: #fff;
+            height: 100vh;
+            position: fixed;
+            left: 80px; top: 0;
+            padding-top: 30px;
+            border-right: 1px solid #dee2e6;
+        }
+
+        .sub-menu-item {
+            padding: 12px 20px;
+            font-size: 15px; color: #555;
+            cursor: pointer; font-weight: 500;
+            border-left: 4px solid transparent;
+            transition: 0.2s;
+        }
+        
+        .sub-menu-item:hover {
+            background-color: #fff5ec;
+            color: var(--primary-color);
+        }
+
+        .sub-menu-item.active {
+            background-color: #fff5ec;
+            color: var(--primary-color);
+            font-weight: bold;
+            border-left-color: var(--primary-color);
+        }
+
+        /* --- NỘI DUNG CHÍNH --- */
+        .main-content-list {
+            margin-left: 280px; /* 80px + 200px */
+            padding: 30px;
+        }
+
+        /* --- TÙY CHỈNH LỊCH (FULLCALENDAR OVERRIDE) --- */
+        
+        /* Màu chữ tiêu đề Thứ/Ngày */
+        .fc-col-header-cell {
+            background-color: #fff5ec;
+            color: var(--primary-color);
+            padding: 10px 0;
+        }
+        .fc-col-header-cell a { text-decoration: none; }
+
+        /* Nút bấm (Tháng, Tuần...) */
+        .fc-button-primary {
+            background-color: #fff !important;
+            color: #555 !important;
+            border: 1px solid #ddd !important;
+            text-transform: capitalize; font-weight: 600;
+        }
+        .fc-button-active {
+            background-color: var(--primary-color) !important;
+            color: #fff !important;
+            border-color: var(--primary-color) !important;
+        }
+
+        /* SỬA LỖI NÚT 'HÔM NAY' (TODAY) */
+        .fc-today-button {
+            background-color: #ffc107 !important; /* Màu vàng cam */
+            color: #000 !important;
+            border: none !important;
+            opacity: 1 !important;
+        }
+        .fc-today-button:disabled { opacity: 0.6 !important; }
+
+        /* Màu chữ cột Tiết */
+        .fc-timegrid-slot-label {
+            color: var(--primary-color);
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        /* Sự kiện (Ô màu) */
+        .fc-event {
+            border: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-sidebar">
+        <div class="d-flex flex-column align-items-center">
+            <div class="sidebar-icon active">
+                <i class="bi bi-person-video3"></i></div>
+                <div class="sidebar-text">Giảng viên</div>
+        </div>
+        <div class="d-flex flex-column align-items-center">
+            <a href="khaothi-dashboard.html" class="text-decoration-none text-dark d-flex flex-column align-items-center">
+                <div class="sidebar-icon"><i class="bi bi-clipboard-check"></i></div>
+                <div class="sidebar-text">Khảo thí</div>
+            </a>
+        </div>
+         <div class="d-flex flex-column align-items-center">
+            <a href="hoidong-pheduyet.html" class="text-decoration-none text-dark d-flex flex-column align-items-center">
+                           <div class="sidebar-icon"><i class="bi bi-people"></i></div><div class="sidebar-text">Hội đồng</div>
+
+            </a>
+        </div>
+         <div class="d-flex flex-column align-items-center">
+            <a href="hethong-dashboard.html" class="text-decoration-none text-dark d-flex flex-column align-items-center">
+                <div class="sidebar-icon"><i class="bi bi-gear"></i></div>
+                <div class="sidebar-text">Hệ thống</div>
+            </a>
+        </div>
+        <div class="d-flex flex-column align-items-center mt-auto mb-3">
+            
+             <a href="../dangnhap/dangnhap.html" class="text-decoration-none text-dark d-flex flex-column align-items-center">
+            <div class="sidebar-icon"><i class="bi bi-box-arrow-right"></i></div>
+            <div class="sidebar-text" onclick="xulyDangxuat()">Đăng xuất</div>
+        </a>
+        </div>
+    </div>
+
+    <div class="sub-sidebar">
+        <div class="sub-menu-item active">Lịch giảng dạy</div>
+        <div class="sub-menu-item" onclick="window.location.href='lophocphan.html'">Lớp học phần</div>
+        <div class="sub-menu-item" onclick="window.location.href='tailieu.html'">Tài liệu</div>
+    </div>
+
+    <div class="main-content-list">
+        <h2 class="mb-4 fw-bold" style="color: #333;">Lịch giảng dạy cá nhân</h2>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4 bg-white rounded-3">
+                <div id='calendar'></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                // Chế độ xem mặc định: Theo tuần
+                initialView: 'timeGridWeek',
+                
+                // Thanh công cụ
+                headerToolbar: {
+                    left: 'prev,next today', // Nút Hôm nay ở đây
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                
+                // Việt hóa
+                buttonText: {
+                    today: 'Hôm nay',
+                    month: 'Tháng',
+                    week: 'Tuần',
+                    day: 'Ngày',
+                    list: 'Danh sách'
+                },
+                locale: 'vi',
+                
+                // --- CẤU HÌNH TIẾT HỌC (QUAN TRỌNG) ---
+                slotMinTime: '07:00:00', // Bắt đầu 7h sáng
+                slotMaxTime: '18:00:00', // Kết thúc 6h chiều (để đủ chỗ cho Tiết 10)
+                allDaySlot: false,       // Ẩn dòng "Cả ngày"
+                slotDuration: '01:00:00', // 1 tiếng = 1 Tiết
+                expandRows: true,         // Dãn dòng ra cho đẹp
+
+                // HÀM ĐỔI SỐ GIỜ THÀNH CHỮ "TIẾT X"
+                slotLabelContent: function(arg) {
+                    let gio = arg.date.getHours();
+                    let tiet = gio - 6; // Vì 7h là tiết 1 => 7-6=1
+
+                    if (tiet >= 1 && tiet <= 10) {
+                        return 'Tiết ' + tiet;
+                    }
+                    return ''; // Các giờ khác để trống
+                },
+
+                // --- DỮ LIỆU LỊCH MẪU ---
+                events: [
+                    {
+                        title: 'Java 5 - Tiết 1,2 (P.301)',
+                        start: '2026-03-02T07:00:00', // 7h = Tiết 1
+                        end: '2026-03-02T09:00:00',   // 9h = Hết Tiết 2
+                        backgroundColor: '#f36f21',   // Màu Cam FPoly
+                        borderColor: '#f36f21'
+                    },
+                    {
+                        title: 'Dự án mẫu - Tiết 3,4 (LAB)',
+                        start: '2026-03-02T09:00:00',
+                        end: '2026-03-02T11:00:00',
+                        backgroundColor: '#0d6efd',   // Màu xanh dương
+                        borderColor: '#0d6efd'
+                    },
+                    {
+                        title: '.NET Core - Tiết 7,8',
+                        start: '2026-03-03T13:00:00', // 13h = Tiết 7
+                        end: '2026-03-03T15:00:00',
+                        backgroundColor: '#198754',   // Màu xanh lá
+                        borderColor: '#198754'
+                    },
+                    {
+                        title: 'Kiểm thử - Tiết 9,10',
+                        start: '2026-03-04T15:00:00', // 15h = Tiết 9
+                        end: '2026-03-04T17:00:00',
+                        backgroundColor: '#6c757d',   // Màu xám
+                        borderColor: '#6c757d'
+                    }
+                ],
+
+                // Sự kiện khi click vào môn học
+                eventClick: function(info) {
+                    alert('Bạn đã chọn môn: ' + info.event.title);
+                }
+            });
+
+            calendar.render();
+        });
+    </script>
+
+</body>
+</html>

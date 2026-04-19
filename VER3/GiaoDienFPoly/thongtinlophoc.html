@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thông tin lớp học</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root { 
+            --primary-orange: #f36f21; 
+            --primary-light: #fff5ec; 
+            --bg-light: #f4f6f9; 
+        }
+        body { background-color: var(--bg-light); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
+
+        /* --- SIDEBAR CHÍNH --- */
+        .main-sidebar { width: 80px; background: #fff; border-right: 1px solid #dee2e6; height: 100vh; position: fixed; left: 0; top: 0; z-index: 1000; padding-top: 20px; display: flex; flex-direction: column; align-items: center; box-shadow: 2px 0 5px rgba(0,0,0,0.05); }
+        .sidebar-icon { width: 45px; height: 45px; background: #f8f9fa; color: #666; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; transition: 0.3s; margin-bottom: 5px; }
+        .sidebar-icon:hover { background: var(--primary-orange); color: #fff; box-shadow: 0 4px 8px rgba(243, 111, 33, 0.4); }
+        .sidebar-text { font-size: 11px; margin-bottom: 20px; color: #666; font-weight: 600; text-align: center; }
+
+        /* --- SIDEBAR PHỤ (MENU MÔN HỌC) --- */
+        .sub-sidebar { width: 200px; background: #fff; height: 100vh; position: fixed; left: 80px; top: 0; border-right: 1px solid #aeaeae; overflow-y: auto; }
+        .course-header { padding:25px 20px 15px 20px; border-bottom: 1px solid #eee; margin-bottom: 15px; }
+        
+        .sub-menu-item { display: flex; align-items: center; padding: 10px 15px; font-size: 12px; color: #333; text-decoration: none; font-weight: 500; border-left: 4px solid transparent; transition: 0.2s ease; }
+        .sub-menu-item i { font-size: 1.2rem; margin-right: 15px; color: #555; width: 25px; text-align: center; }
+        .sub-menu-item:hover { color: var(--primary-orange); background: var(--primary-light); }
+        .sub-menu-item:hover i { color: var(--primary-orange); }
+        .sub-menu-item.active { background: var(--primary-light); color: var(--primary-orange); font-weight: bold; border-left: 4px solid var(--primary-orange); }
+        .sub-menu-item.active i { color: var(--primary-orange); }
+
+        /* --- NỘI DUNG CHÍNH --- */
+        .main-content { margin-left: 250px; padding: 40px; }
+
+        /* --- STYLE CHO PHẦN THÔNG TIN LỚP HỌC --- */
+        .info-section {
+            background: #fff;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            margin-bottom: 25px;
+            border: 1px solid #eee;
+            font-size: small;
+        }
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--primary-orange);
+            border-bottom: 2px solid var(--bg-light);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            font-size: smaller;
+
+        }
+        .formula-box {
+            background-color: #fff9c4;
+            border: 1px dashed #fbc02d;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #d32f2f;
+            margin: 15px 0;
+            letter-spacing: 1px;
+                        font-size: smaller;
+
+        }
+        .custom-list { padding-left: 20px; color: #444; line-height: 1.8; }
+        .custom-list li { margin-bottom: 8px; }
+        .highlight-text { font-weight: 600; color: #000; }
+    </style>
+</head>
+<body>
+    
+    <div class="main-sidebar">
+        <div class="d-flex flex-column align-items-center"><a href="lophocphan.html" class="text-decoration-none text-dark d-flex flex-column align-items-center"><div class="sidebar-icon"><i class="bi bi-person-video3"></i></div><div class="sidebar-text">Giảng viên</div></a></div>
+        <div class="d-flex flex-column align-items-center">
+            <a href="khaothi-dashboard.html" class="text-decoration-none text-dark d-flex flex-column align-items-center">
+                <div class="sidebar-icon"><i class="bi bi-clipboard-check"></i></div>
+                <div class="sidebar-text">Khảo thí</div>
+            </a>
+        </div>        
+        <div class="d-flex flex-column align-items-center">
+            <a href="hoidong-pheduyet.html" class="text-decoration-none text-dark d-flex flex-column align-items-center">
+                           <div class="sidebar-icon"><i class="bi bi-people"></i></div><div class="sidebar-text">Hội đồng</div>
+
+            </a>
+        </div>
+         <div class="d-flex flex-column align-items-center">
+            <a href="hethong-dashboard.html" class="text-decoration-none text-dark d-flex flex-column align-items-center">
+                <div class="sidebar-icon"><i class="bi bi-gear"></i></div>
+                <div class="sidebar-text">Hệ thống</div>
+            </a>
+        </div>
+        <div class="d-flex flex-column align-items-center mt-auto mb-3"> <a href="../dangnhap/dangnhap.html" class="text-decoration-none text-dark d-flex flex-column align-items-center">
+            <div class="sidebar-icon"><i class="bi bi-box-arrow-right"></i></div>
+            <div class="sidebar-text" onclick="xulyDangxuat()">Đăng xuất</div>
+        </a></div>
+    </div>
+
+    <div class="sub-sidebar">
+        <div class="course-header">
+            <a href="lophocphan.html" class="text-decoration-none text-dark d-inline-block mb-3" style="font-size: 14px;">
+                <i class="bi bi-arrow-left"></i> Quay lại danh sách
+            </a>
+            <h5 class="fw-bold text-dark mb-1">Kiểm thử phần mềm</h5>
+            <span class="badge bg-success text-white">Katalon</span>
+        </div>
+
+        <a href="thongtinlophoc.html" class="sub-menu-item active">
+            <i class="bi bi-info-circle"></i> Thông tin lớp học
+        </a>
+        <a href="noidunggiangday.html" class="sub-menu-item">
+            <i class="bi bi-book"></i> Nội dung giảng dạy
+        </a>
+        <a href="quanlydiem.html" class="sub-menu-item">
+            <i class="bi bi-journal-check"></i> Quản lý điểm
+        </a>
+       
+        <a href="#" class="sub-menu-item">
+            <i class="bi bi-bell"></i> Thông báo
+        </a>
+        <a href="diemdanh.html" class="sub-menu-item">
+            <i class="bi bi-calendar2-check"></i> Bảng điểm danh
+        </a>
+    </div>
+
+    <div class="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold text-dark mb-0">Mô tả học phần</h2>
+            <button class="btn btn-outline-primary btn-sm"><i class="bi bi-people-fill me-1"></i> Xem danh sách lớp</button>
+        </div>
+
+        <div class="info-section">
+            <h5 class="fw-bold mb-3" style="font-size: 1.4rem;">Kiểm thử và đảm bảo chất lượng phần mềm</h5>
+            <p><i class="bi bi-tag-fill text-secondary me-2"></i><strong>Số tín chỉ:</strong> 03 tín chỉ (2 tín chỉ lý thuyết, 1 tín chỉ thực hành)</p>
+            
+            <div class="section-title mt-4"><i class="bi bi-bullseye me-2"></i> Mục tiêu môn học</div>
+            <ul class="custom-list">
+                <li><span class="highlight-text">Mục tiêu về kiến thức:</span> Cung cấp cho sinh viên kiến thức về vai trò và tầm quan trọng của kiểm thử phần mềm, phân biệt và nắm vững các loại kiểm thử phần mềm, nắm vững các bước trong quy trình kiểm thử phần mềm. Cung cấp cho sinh viên kiến thức về một số kỹ thuật kiểm thử hộp đen và một số kỹ thuật kiểm thử hộp trắng để sinh ca kiểm thử.</li>
+                <li><span class="highlight-text">Mục tiêu về kỹ năng:</span> Sinh viên có khả năng phân tích, thiết kế, và thực hiện các ca kiểm thử, cùng với việc sử dụng các công cụ tự động phổ biến.</li>
+            </ul>
+
+            <div class="section-title"><i class="bi bi-check-circle-fill me-2"></i> Chuẩn đầu ra học phần</div>
+            <ul class="custom-list">
+                <li>Hiểu được kiến thức cơ bản liên quan đến Kiểm thử và đảm bảo chất lượng phần mềm.</li>
+                <li>Có khả năng áp dụng các kỹ thuật kiểm thử để thiết kế các ca kiểm thử cho một số ứng dụng thực tế.</li>
+                <li>Có khả năng sử dụng một số công cụ kiểm thử tự động thực thi các ca kiểm thử.</li>
+            </ul>
+        </div>
+
+        <div class="info-section">
+            <div class="section-title"><i class="bi bi-calculator me-2"></i> Quy định về điểm của học phần</div>
+            
+            <div class="formula-box">
+                [ĐIỂM HP] = [TDL] x 5% + [TBTN1] x 15% + [TBKT] x 30% + [THI] x 50%
+            </div>
+            
+            <p class="fw-bold mb-2">Trong đó:</p>
+            <ul class="custom-list">
+                <li><span class="highlight-text">[ĐIỂM HP]:</span> Điểm tổng kết của học phần (môn học).</li>
+                <li><span class="highlight-text">[TDL]:</span> Điểm ý thức, thái độ và thời gian tham gia các buổi học trên lớp.</li>
+                <li><span class="highlight-text">[TBTN1]:</span> Điểm trung bình - cao nhất trong 03 lần làm bài đầu tiên - các bài kiểm tra trắc nghiệm sau mỗi buổi học trên LMS.</li>
+                <li><span class="highlight-text">[TBKT]:</span> Điểm trung bình các bài kiểm tra kỹ năng tương ứng với mỗi tín chỉ.</li>
+                <li><span class="highlight-text">[THI]:</span> Điểm thi kết thúc học phần.</li>
+            </ul>
+
+            <div class="mt-4">
+                <div class="col-md-6">
+                    <p><i class="bi bi-bar-chart-fill text-secondary me-2"></i><strong>Thang điểm:</strong> 10</p>
+                    <p><i class="bi bi-laptop text-secondary me-2"></i><strong>Hình thức thi:</strong> Thực hành</p>
+                    <p><i class="bi bi-clock-history text-secondary me-2"></i><strong>Thời gian thi:</strong> 90 phút</p>
+                </div>
+                <div class="col-md-6 ">
+                    <p class="fw-bold text-danger"><i class="bi bi-exclamation-octagon-fill me-1"></i> Điều kiện dự thi (Đối với SV):</p>
+                    <ul class="custom-list" style="font-size: small;">
+                        <li>Tham dự tối thiểu <strong>80%</strong> giờ học trên lớp.</li>
+                        <li>Điểm tối thiểu mỗi bài kiểm tra trắc nghiệm sau mỗi bài học là <strong>8 điểm</strong> (trong thời hạn 1 tuần sau khi học trên lớp; không giới hạn số lần làm).</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <div class="section-title"><i class="bi bi-journal-bookmark-fill me-2"></i> Tài liệu tham khảo</div>
+            <ul class="custom-list" style="list-style-type: none; padding-left: 0;">
+                <li><strong>[1]</strong> Nguyễn Lan Oanh, Hoàng Thị Cành, Đào Thị Thu (2024), <i>Bài giảng Kiểm thử và Đảm bảo chất lượng phần mềm</i> (Lưu hành nội bộ).</li>
+                <li><strong>[2]</strong> Phạm Ngọc Hùng, Trương Anh Hoàng, Đăng Văn Hưng (2014), <i>Giáo trình kiểm thử phần mềm</i>, ĐHCN-ĐHQGHN.</li>
+                <li><strong>[3]</strong> Kshirasagar Naik, <i>Software testing and quality assuarance, theory and practice</i>, Wiley.</li>
+                <li><strong>[4]</strong> Ian Sommerville (2015), <i>Software Engineering; 9th Edition</i>, Addion Wesley.</li>
+                <li><strong>[5]</strong> Gerald D. Everett, Raymond McLeod, Jr. (2007), <i>Software Testing. Testing Across the Entire Software Development Life Cycle</i>, IEEE press, Wiley-interscience, A John Wiley&Sons, Inc, Publication.</li>
+            </ul>
+        </div>
+
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Khảo thí - Quản lý điểm Final</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root { 
+            --primary-orange: #f36f21; 
+            --primary-light: #fff5ec; 
+            --bg-light: #f4f6f9; 
+            --text-main: #333;
+            --blue-theme: #0d6efd;
+        }
+        body { background-color: var(--bg-light); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
+
+        /* --- SIDEBAR --- */
+        .main-sidebar { width: 80px; background: #fff; border-right: 1px solid #dee2e6; height: 100vh; position: fixed; left: 0; top: 0; z-index: 1000; padding-top: 20px; display: flex; flex-direction: column; align-items: center; box-shadow: 2px 0 5px rgba(0,0,0,0.05); }
+        .sidebar-icon { width: 45px; height: 45px; background: #f8f9fa; color: #666; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; transition: 0.3s; margin-bottom: 5px; }
+        .sidebar-icon:hover, .sidebar-icon.active { background: var(--blue-theme); color: #fff; box-shadow: 0 4px 8px rgba(13, 110, 253, 0.4); }
+        .sidebar-text { font-size: 11px; margin-bottom: 20px; color: #666; font-weight: 600; text-align: center; }
+
+        .main-content { margin-left: 80px; padding: 30px 40px; transition: margin-right 0.3s; }
+
+        /* --- BẢNG ĐIỂM --- */
+        .grade-table-wrapper { background: #fff; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #dee2e6; overflow-x: auto; margin-bottom: 20px; height: 65vh; overflow-y: auto;}
+        .grade-table { margin-bottom: 0; font-size: 14px; min-width: 1700px; }
+        .grade-table thead th { background-color: #f8f9fa; color: #333; font-weight: 600; border-bottom: 2px solid #dee2e6; vertical-align: middle; white-space: nowrap; text-align: center; padding: 12px 8px; position: sticky; top: 0; z-index: 1;}
+        .grade-table tbody td { vertical-align: middle; color: #444; padding: 6px 8px; text-align: center; white-space: nowrap;}
+        
+        .locked-grade { background-color: #f1f3f5; color: #6c757d; font-weight: 600;}
+        
+        .input-final { 
+            width: 70px; text-align: center; padding: 4px; 
+            border: 2px solid var(--blue-theme); border-radius: 4px; 
+            margin: 0 auto; font-size: 15px; font-weight: bold; color: var(--blue-theme); 
+        }
+        .input-final:focus { outline: none; box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25); background-color: #f0f7ff;}
+        .input-final::-webkit-outer-spin-button, .input-final::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        
+        /* Hiệu ứng khi bị phạt 0 điểm */
+        .input-final.punished { border-color: #dc3545; background-color: #fff0f0; color: #dc3545; }
+
+        .kthp-result { font-weight: bold; font-size: 16px; color: #dc3545; }
+        .letter-grade { font-size: 16px; font-weight: 900; }
+
+        /* --- HÒM THƯ PHÚC KHẢO --- */
+        .mailbox-panel {
+            position: fixed; top: 0; right: -450px; width: 450px; height: 100vh;
+            background-color: #fff; box-shadow: -5px 0 15px rgba(0,0,0,0.05); z-index: 1050;
+            transition: right 0.3s ease; border-left: 1px solid #dee2e6; display: flex; flex-direction: column;
+        }
+        .mailbox-panel.open { right: 0; }
+        .mailbox-header { padding: 20px; background-color: var(--blue-theme); color: white; display: flex; justify-content: space-between; align-items: center; }
+        .mailbox-body { padding: 20px; overflow-y: auto; flex-grow: 1; background-color: #f8f9fa;}
+        .mail-item { background: #fff; border: 1px solid #dee2e6; border-left: 4px solid #ffc107; border-radius: 6px; padding: 15px; margin-bottom: 15px; cursor: pointer; transition: 0.2s; }
+        .mail-item:hover { border-color: #ffc107; box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
+        .mail-item.resolved { border-left-color: #198754; opacity: 0.6; pointer-events: none; } 
+        .mail-title { font-weight: bold; color: #333; margin-bottom: 5px; font-size: 15px;}
+        
+        .mail-detail-box { display: none; background: #fff; border: 1px solid #dee2e6; border-radius: 6px; padding: 20px; margin-top: 15px; }
+        .mail-detail-box.show { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .info-list p { margin-bottom: 6px; font-size: 14.5px; color: #444;}
+        .info-list strong { color: #222; display: inline-block; width: 120px;}
+        .old-score-highlight { font-size: 16px; color: #dc3545; font-weight: bold; background: #ffe6e6; padding: 2px 8px; border-radius: 4px; }
+
+        .floating-mail-btn {
+            display: none; position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%;
+            background-color: #ffc107; color: #000; align-items: center; justify-content: center;
+            font-size: 24px; box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4); cursor: pointer; z-index: 1040; transition: 0.3s;
+        }
+        .floating-mail-btn:hover { transform: scale(1.1); }
+        .badge-notify { position: absolute; top: -5px; right: -5px; background: red; color: white; font-size: 12px; padding: 4px 8px; border-radius: 50%; font-weight: bold;}
+        .bounce-in { animation: bounceIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes bounceIn { 0% { transform: scale(0); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
+        .btn-ai { background: linear-gradient(45deg, #6f42c1, #0dcaf0); color: white; border: none; display: none; }
+        .btn-ai:hover { background: linear-gradient(45deg, #59339d, #0aa8c7); color: white; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(111, 66, 193, 0.3);}
+
+        /* Khung tìm kiếm */
+        .search-box { width: 350px; margin-top: 10px;}
+    </style>
+</head>
+<body>
+    
+    <div class="main-sidebar">
+        <div class="d-flex flex-column align-items-center"><a href="lichgiangday.html" class="text-decoration-none text-dark d-flex flex-column align-items-center"><div class="sidebar-icon"><i class="bi bi-person-video3"></i></div><div class="sidebar-text">Giảng viên</div></a></div>
+        <div class="d-flex flex-column align-items-center"><a href="khaothi-dashboard.html" class="text-decoration-none d-flex flex-column align-items-center"><div class="sidebar-icon active"><i class="bi bi-clipboard-check"></i></div><div class="sidebar-text text-primary">Khảo thí</div></a></div>
+        <div class="d-flex flex-column align-items-center">
+            <a href="hoidong-pheduyet.html" class="text-decoration-none text-dark d-flex flex-column align-items-center">
+                           <div class="sidebar-icon"><i class="bi bi-people"></i></div><div class="sidebar-text">Hội đồng</div>
+
+            </a>
+        </div>
+         <div class="d-flex flex-column align-items-center">
+            <a href="hethong-dashboard.html" class="text-decoration-none text-dark d-flex flex-column align-items-center">
+                <div class="sidebar-icon"><i class="bi bi-gear"></i></div>
+                <div class="sidebar-text">Hệ thống</div>
+            </a>
+        </div>
+    </div>
+
+    <div class="main-content" id="mainContent">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold mb-1">Quản lý điểm Final</h3>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button id="btnPublish" class="btn btn-secondary fw-bold px-4 py-2 shadow-sm" disabled onclick="publishGrades()">
+                    <i class="bi bi-megaphone-fill me-2"></i> Công bố điểm dự kiến
+                </button>
+                <button id="btnAnalyze" class="btn btn-ai fw-bold px-4 py-2 shadow-sm transition" onclick="window.location.href='khaothi-aianalysis.html'">
+                    <i class="bi bi-robot me-2"></i> Phân tích chất lượng & Đề xuất
+                </button>
+            </div>
+        </div>
+
+        <div class="row mb-3 align-items-center">
+            <div class="col-md-8">
+                <div class="alert alert-info border-0 shadow-sm mb-0" role="alert">
+                    <i class="bi bi-info-circle-fill me-2"></i> <strong>Quy chế:</strong> Chỉ nhập Điểm <strong>THI</strong>. Hệ thống tự tính: <code>TKHP = (CC + THI) / 2</code>.
+                </div>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="input-group search-box float-end shadow-sm">
+                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" id="searchInput" class="form-control border-start-0 ps-0" placeholder="Tìm tên sinh viên, tên học phần..." onkeyup="filterTable()">
+                </div>
+            </div>
+        </div>
+
+        <div class="grade-table-wrapper">
+            <table class="table table-bordered grade-table align-middle" id="gradeTable">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">STT</th>
+                        <th class="text-start">Tên sinh viên</th>
+                        <th>Mã học phần</th>
+                        <th class="text-start">Tên học phần</th>
+                        <th style="width: 60px;">Số TC</th>
+                        <th style="width: 70px;">Lần học</th>
+                        <th style="width: 70px;">Lần thi</th>
+                        <th style="width: 80px;">Điểm thứ</th>
+                        <th style="width: 100px;">Là điểm<br>tổng kết môn</th>
+                        <th style="width: 60px;" class="bg-light">CC</th>
+                        <th class="bg-primary text-white" style="width: 100px;">THI<br><small class="fw-normal">(Nhập)</small></th>
+                        <th style="width: 70px; background-color: #fff3cd;">TKHP</th>
+                        <th style="width: 80px; background-color: #e2e3e5;">Điểm chữ</th>
+                        <th style="width: 100px;">Đánh giá</th>
+                        <th style="width: 140px;">Thao tác</th> </tr>
+                </thead>
+                <tbody>
+                    <tr id="row-sv-1">
+                        <td>1</td><td class="text-start fw-bold student-name-cell">Nguyễn Văn A</td><td class="text-muted">KTPM01</td><td class="text-start course-name-cell">Kiểm thử phần mềm</td><td>3</td><td>1</td><td>1</td><td>1</td><td><i class="bi bi-check-circle text-success"></i></td><td class="locked-grade val-cc">8.0</td>
+                        <td><input type="number" class="input-final final-input" step="0.1" min="0" max="10" oninput="calculateKTHP(this)"></td><td class="kthp-result">-</td><td class="letter-grade">-</td><td class="danh-gia-result">-</td>
+                        <td><button class="btn btn-outline-danger btn-sm w-100 fw-medium" onclick="toggleViolation(this)"><i class="bi bi-exclamation-triangle"></i> Vi phạm QC</button></td>
+                    </tr>
+                    <tr id="row-sv-2">
+                        <td>2</td><td class="text-start fw-bold student-name-cell">Trần Thị B</td><td class="text-muted">KTPM01</td><td class="text-start course-name-cell">Kiểm thử phần mềm</td><td>3</td><td>1</td><td>1</td><td>1</td><td><i class="bi bi-check-circle text-success"></i></td><td class="locked-grade val-cc">9.0</td>
+                        <td><input type="number" class="input-final final-input" step="0.1" min="0" max="10" oninput="calculateKTHP(this)"></td><td class="kthp-result">-</td><td class="letter-grade">-</td><td class="danh-gia-result">-</td>
+                        <td><button class="btn btn-outline-danger btn-sm w-100 fw-medium" onclick="toggleViolation(this)"><i class="bi bi-exclamation-triangle"></i> Vi phạm QC</button></td>
+                    </tr>
+                    <tr id="row-sv-3">
+                        <td>3</td><td class="text-start fw-bold student-name-cell">Lê Minh C</td><td class="text-muted">LTM02</td><td class="text-start course-name-cell">Lập trình mạng</td><td>3</td><td>1</td><td>1</td><td>1</td><td><i class="bi bi-check-circle text-success"></i></td><td class="locked-grade val-cc">4.0</td>
+                        <td><input type="number" class="input-final final-input" step="0.1" min="0" max="10" oninput="calculateKTHP(this)"></td><td class="kthp-result">-</td><td class="letter-grade">-</td><td class="danh-gia-result">-</td>
+                        <td><button class="btn btn-outline-danger btn-sm w-100 fw-medium" onclick="toggleViolation(this)"><i class="bi bi-exclamation-triangle"></i> Vi phạm QC</button></td>
+                    </tr>
+                    <tr id="row-sv-4">
+                        <td>4</td><td class="text-start fw-bold student-name-cell">Phạm Hoàng D</td><td class="text-muted">LTM02</td><td class="text-start course-name-cell">Lập trình mạng</td><td>3</td><td>1</td><td>1</td><td>1</td><td><i class="bi bi-check-circle text-success"></i></td><td class="locked-grade val-cc">5.5</td>
+                        <td><input type="number" class="input-final final-input" step="0.1" min="0" max="10" oninput="calculateKTHP(this)"></td><td class="kthp-result">-</td><td class="letter-grade">-</td><td class="danh-gia-result">-</td>
+                        <td><button class="btn btn-outline-danger btn-sm w-100 fw-medium" onclick="toggleViolation(this)"><i class="bi bi-exclamation-triangle"></i> Vi phạm QC</button></td>
+                    </tr>
+                    <tr id="row-sv-5">
+                        <td>5</td><td class="text-start fw-bold student-name-cell">Đỗ Thị E</td><td class="text-muted">CSDL03</td><td class="text-start course-name-cell">Cơ sở dữ liệu</td><td>4</td><td>1</td><td>1</td><td>1</td><td><i class="bi bi-check-circle text-success"></i></td><td class="locked-grade val-cc">8.5</td>
+                        <td><input type="number" class="input-final final-input" step="0.1" min="0" max="10" oninput="calculateKTHP(this)"></td><td class="kthp-result">-</td><td class="letter-grade">-</td><td class="danh-gia-result">-</td>
+                        <td><button class="btn btn-outline-danger btn-sm w-100 fw-medium" onclick="toggleViolation(this)"><i class="bi bi-exclamation-triangle"></i> Vi phạm QC</button></td>
+                    </tr>
+                    <tr id="row-sv-6">
+                        <td>6</td><td class="text-start fw-bold student-name-cell">Vũ Văn F</td><td class="text-muted">CSDL03</td><td class="text-start course-name-cell">Cơ sở dữ liệu</td><td>4</td><td>2</td><td>1</td><td>1</td><td><i class="bi bi-check-circle text-success"></i></td><td class="locked-grade val-cc">6.0</td>
+                        <td><input type="number" class="input-final final-input" step="0.1" min="0" max="10" oninput="calculateKTHP(this)"></td><td class="kthp-result">-</td><td class="letter-grade">-</td><td class="danh-gia-result">-</td>
+                        <td><button class="btn btn-outline-danger btn-sm w-100 fw-medium" onclick="toggleViolation(this)"><i class="bi bi-exclamation-triangle"></i> Vi phạm QC</button></td>
+                    </tr>
+                    <tr id="row-sv-7">
+                        <td>7</td><td class="text-start fw-bold student-name-cell">Bùi Quang G</td><td class="text-muted">TTNT04</td><td class="text-start course-name-cell">Trí tuệ nhân tạo</td><td>3</td><td>1</td><td>1</td><td>1</td><td><i class="bi bi-check-circle text-success"></i></td><td class="locked-grade val-cc">9.5</td>
+                        <td><input type="number" class="input-final final-input" step="0.1" min="0" max="10" oninput="calculateKTHP(this)"></td><td class="kthp-result">-</td><td class="letter-grade">-</td><td class="danh-gia-result">-</td>
+                        <td><button class="btn btn-outline-danger btn-sm w-100 fw-medium" onclick="toggleViolation(this)"><i class="bi bi-exclamation-triangle"></i> Vi phạm QC</button></td>
+                    </tr>
+                    <tr id="row-sv-8">
+                        <td>8</td><td class="text-start fw-bold student-name-cell">Ngô Thị H</td><td class="text-muted">TTNT04</td><td class="text-start course-name-cell">Trí tuệ nhân tạo</td><td>3</td><td>1</td><td>1</td><td>1</td><td><i class="bi bi-check-circle text-success"></i></td><td class="locked-grade val-cc">7.0</td>
+                        <td><input type="number" class="input-final final-input" step="0.1" min="0" max="10" oninput="calculateKTHP(this)"></td><td class="kthp-result">-</td><td class="letter-grade">-</td><td class="danh-gia-result">-</td>
+                        <td><button class="btn btn-outline-danger btn-sm w-100 fw-medium" onclick="toggleViolation(this)"><i class="bi bi-exclamation-triangle"></i> Vi phạm QC</button></td>
+                    </tr>
+                    <tr id="row-sv-9">
+                        <td>9</td><td class="text-start fw-bold student-name-cell">Đặng Văn I</td><td class="text-muted">KTPM01</td><td class="text-start course-name-cell">Kiểm thử phần mềm</td><td>3</td><td>1</td><td>2</td><td>1</td><td><i class="bi bi-check-circle text-success"></i></td><td class="locked-grade val-cc">8.0</td>
+                        <td><input type="number" class="input-final final-input" step="0.1" min="0" max="10" oninput="calculateKTHP(this)"></td><td class="kthp-result">-</td><td class="letter-grade">-</td><td class="danh-gia-result">-</td>
+                        <td><button class="btn btn-outline-danger btn-sm w-100 fw-medium" onclick="toggleViolation(this)"><i class="bi bi-exclamation-triangle"></i> Vi phạm QC</button></td>
+                    </tr>
+                    <tr id="row-sv-10">
+                        <td>10</td><td class="text-start fw-bold student-name-cell">Hồ Minh J</td><td class="text-muted">LTM02</td><td class="text-start course-name-cell">Lập trình mạng</td><td>3</td><td>1</td><td>1</td><td>1</td><td><i class="bi bi-check-circle text-success"></i></td><td class="locked-grade val-cc">4.5</td>
+                        <td><input type="number" class="input-final final-input" step="0.1" min="0" max="10" oninput="calculateKTHP(this)"></td><td class="kthp-result">-</td><td class="letter-grade">-</td><td class="danh-gia-result">-</td>
+                        <td><button class="btn btn-outline-danger btn-sm w-100 fw-medium" onclick="toggleViolation(this)"><i class="bi bi-exclamation-triangle"></i> Vi phạm QC</button></td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="floating-mail-btn" id="mailBtn" onclick="toggleMailbox()">
+        <i class="bi bi-envelope-paper"></i>
+        <span class="badge-notify" id="mailCountBadge">2</span>
+    </div>
+
+    <div class="mailbox-panel" id="mailboxPanel">
+        <div class="mailbox-header">
+            <h5 class="mb-0 fw-bold"><i class="bi bi-inbox me-2"></i> Đơn Phúc Khảo</h5>
+            <button type="button" class="btn-close btn-close-white" onclick="toggleMailbox()"></button>
+        </div>
+        
+        <div class="mailbox-body">
+            <div class="mail-item" id="mail-item-1" onclick="showMailDetail('detail-1', 'row-sv-1')">
+                <div class="mail-title">Yêu cầu phúc khảo - KTPM01</div>
+                <div class="mail-meta"><span>Nguyễn Văn A</span><span class="text-danger fw-bold">Mới</span></div>
+            </div>
+            <div class="mail-detail-box" id="detail-1">
+                <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">Thông tin Đơn</h6>
+                <div class="info-list mb-3">
+                    <p><strong>Sinh viên:</strong> Nguyễn Văn A</p>
+                    <p><strong>Mã SV:</strong> dtc235001</p>
+                    <p><strong>Mã học phần:</strong> KTPM01</p>
+                    <p><strong>Tên học phần:</strong> Kiểm thử phần mềm</p>
+                    <p><strong>Điểm THI cũ:</strong> <span id="oldScoreDisplay-detail-1" class="old-score-highlight"></span></p>
+                    <p class="mt-2 text-danger"><strong>Yêu cầu/Lý do:</strong> Xin thầy cô kiểm tra lại giúp em điểm bài thi tự luận câu 3 ạ.</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-success">Cập nhật điểm THI mới:</label>
+                    <input type="number" class="form-control border-success" id="newScore-1" placeholder="Nhập điểm sau phúc khảo...">
+                </div>
+                <button class="btn btn-success btn-sm w-100 fw-bold py-2" onclick="updateScoreFromMail('row-sv-1', 'newScore-1', 'detail-1', 'mail-item-1')">
+                    <i class="bi bi-check2-circle"></i> Cập nhật & Đóng
+                </button>
+            </div>
+
+            <div class="mail-item mt-3" id="mail-item-2" onclick="showMailDetail('detail-2', 'row-sv-3')">
+                <div class="mail-title">Yêu cầu phúc khảo - LTM02</div>
+                <div class="mail-meta"><span>Lê Minh C</span><span class="text-danger fw-bold">Mới</span></div>
+            </div>
+            <div class="mail-detail-box" id="detail-2">
+                <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">Thông tin Đơn</h6>
+                <div class="info-list mb-3">
+                    <p><strong>Sinh viên:</strong> Lê Minh C</p>
+                    <p><strong>Mã SV:</strong> dtc235003</p>
+                    <p><strong>Mã học phần:</strong> LTM02</p>
+                    <p><strong>Tên học phần:</strong> Lập trình mạng</p>
+                    <p><strong>Điểm THI cũ:</strong> <span id="oldScoreDisplay-detail-2" class="old-score-highlight"></span></p>
+                    <p class="mt-2 text-danger"><strong>Yêu cầu/Lý do:</strong> Em bị tô nhầm mã đề trắc nghiệm, mong thầy cô xem xét.</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-success">Cập nhật điểm THI mới:</label>
+                    <input type="number" class="form-control border-success" id="newScore-2" placeholder="Nhập điểm sau phúc khảo...">
+                </div>
+                <button class="btn btn-success btn-sm w-100 fw-bold py-2" onclick="updateScoreFromMail('row-sv-3', 'newScore-2', 'detail-2', 'mail-item-2')">
+                    <i class="bi bi-check2-circle"></i> Cập nhật & Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container position-fixed top-0 end-0 p-4" style="z-index: 1055;">
+        <div id="actionToast" class="toast align-items-center text-white border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body fw-bold fs-6" id="toastMessage">Thông báo</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Hàm Lọc (Tìm kiếm) trong bảng
+        function filterTable() {
+            let input = document.getElementById("searchInput").value.toLowerCase();
+            let tbody = document.querySelector("#gradeTable tbody");
+            let rows = tbody.querySelectorAll("tr");
+
+            rows.forEach(row => {
+                let studentName = row.querySelector('.student-name-cell').innerText.toLowerCase();
+                let courseName = row.querySelector('.course-name-cell').innerText.toLowerCase();
+                
+                if (studentName.includes(input) || courseName.includes(input)) {
+                    row.style.display = ""; // Hiện dòng
+                } else {
+                    row.style.display = "none"; // Ẩn dòng
+                }
+            });
+        }
+
+        // Hiện thông báo
+        function showToast(msg, type='bg-success') {
+            let toastEl = document.getElementById('actionToast');
+            toastEl.className = `toast align-items-center text-white border-0 ${type}`;
+            document.getElementById('toastMessage').innerHTML = msg;
+            new bootstrap.Toast(toastEl).show();
+        }
+
+        // Quy đổi điểm
+        function getGradeInfo(score) {
+            let letter = 'F'; let color = 'text-danger'; let danhGia = '<span class="text-danger">Không đạt</span>';
+            if (score >= 8.5) { letter = 'A'; color = 'text-success'; danhGia = '<span class="text-success">Đạt</span>'; }
+            else if (score >= 8.0) { letter = 'B+'; color = 'text-primary'; danhGia = '<span class="text-success">Đạt</span>'; }
+            else if (score >= 7.0) { letter = 'B'; color = 'text-primary'; danhGia = '<span class="text-success">Đạt</span>'; }
+            else if (score >= 6.5) { letter = 'C+'; color = 'text-warning'; danhGia = '<span class="text-success">Đạt</span>'; }
+            else if (score >= 5.5) { letter = 'C'; color = 'text-warning'; danhGia = '<span class="text-success">Đạt</span>'; }
+            else if (score >= 5.0) { letter = 'D+'; color = 'text-secondary'; danhGia = '<span class="text-success">Đạt</span>'; }
+            else if (score >= 4.0) { letter = 'D'; color = 'text-secondary'; danhGia = '<span class="text-success">Đạt</span>'; }
+            return { letter, color, danhGia };
+        }
+
+        // Tính TKHP
+        function calculateKTHP(inputEl) {
+            let row = inputEl.closest('tr');
+            let cc = parseFloat(row.querySelector('.val-cc').innerText) || 0;
+            let resultCell = row.querySelector('.kthp-result');
+            let letterCell = row.querySelector('.letter-grade');
+            let danhGiaCell = row.querySelector('.danh-gia-result');
+
+            if(inputEl.value !== '') {
+                let thi = parseFloat(inputEl.value);
+                let kthp = (cc + thi) / 2;
+                kthp = Math.round(kthp * 10) / 10;
+                resultCell.innerText = kthp.toFixed(1);
+                
+                let gradeInfo = getGradeInfo(kthp);
+                letterCell.innerHTML = `<span class="${gradeInfo.color}">${gradeInfo.letter}</span>`;
+                danhGiaCell.innerHTML = gradeInfo.danhGia;
+            } else {
+                resultCell.innerText = '-'; letterCell.innerText = '-'; danhGiaCell.innerText = '-';
+            }
+            checkCompletion(); 
+        }
+
+        // Sự kiện: Bấm nút Vi phạm quy chế
+        function toggleViolation(btn) {
+            let row = btn.closest('tr');
+            let input = row.querySelector('.final-input');
+            
+            // Nếu đã công bố điểm thì cấm sửa vi phạm
+            if(document.getElementById('btnPublish').innerText === 'Đã công bố') {
+                showToast('<i class="bi bi-x-circle-fill me-2"></i> Đã công bố điểm, không thể thay đổi!', 'bg-danger');
+                return;
+            }
+
+            if(btn.classList.contains('btn-outline-danger')) {
+                // ĐÁNH DẤU VI PHẠM
+                btn.classList.replace('btn-outline-danger', 'btn-danger');
+                btn.innerHTML = '<i class="bi bi-x-octagon"></i> Hủy vi phạm';
+                
+                // Ép điểm thi về 0 và khóa lại
+                input.value = 0;
+                input.readOnly = true; 
+                input.classList.add('punished');
+                calculateKTHP(input); // Auto tính lại với số 0
+                
+                showToast('<i class="bi bi-exclamation-triangle-fill me-2"></i> Đã đánh dấu vi phạm. Điểm bài thi = 0.', 'bg-danger');
+            } else {
+                // HỦY VI PHẠM
+                btn.classList.replace('btn-danger', 'btn-outline-danger');
+                btn.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Vi phạm QC';
+                
+                // Mở khóa và xóa điểm 0
+                input.value = '';
+                input.readOnly = false;
+                input.classList.remove('punished');
+                calculateKTHP(input); 
+            }
+        }
+
+        function checkCompletion() {
+            let inputs = document.querySelectorAll('.final-input');
+            let allFilled = true;
+            inputs.forEach(input => { if(input.value === '') allFilled = false; });
+
+            let btnPublish = document.getElementById('btnPublish');
+            if (allFilled) {
+                btnPublish.disabled = false;
+                btnPublish.classList.replace('btn-secondary', 'btn-success');
+            } else {
+                btnPublish.disabled = true;
+                btnPublish.classList.replace('btn-success', 'btn-secondary');
+            }
+        }
+
+        function publishGrades() {
+            showToast('<i class="bi bi-check-circle-fill me-2"></i> Đã công bố điểm & mở cổng Phúc khảo!', 'bg-success');
+            document.querySelectorAll('.final-input').forEach(input => {
+                input.disabled = true; // Khóa cứng toàn bộ
+                input.style.backgroundColor = '#e9ecef';
+            });
+            document.getElementById('btnPublish').innerText = 'Đã công bố';
+            document.getElementById('btnPublish').disabled = true;
+
+            const mailBtn = document.getElementById('mailBtn');
+            mailBtn.style.display = 'flex';
+            mailBtn.classList.add('bounce-in');
+        }
+
+        function toggleMailbox() { document.getElementById('mailboxPanel').classList.toggle('open'); }
+        
+        function showMailDetail(detailId, rowId) {
+            document.querySelectorAll('.mail-detail-box').forEach(box => { if(box.id !== detailId) box.classList.remove('show'); });
+            
+            if(rowId) {
+                let currentInput = document.getElementById(rowId).querySelector('.final-input').value;
+                document.getElementById('oldScoreDisplay-' + detailId).innerText = currentInput !== '' ? currentInput : 'Trống';
+            }
+            document.getElementById(detailId).classList.toggle('show');
+        }
+
+        function updateScoreFromMail(rowId, inputNewScoreId, detailId, mailItemId) {
+            let newScoreStr = document.getElementById(inputNewScoreId).value;
+            if(newScoreStr === '') { alert("Vui lòng nhập điểm mới!"); return; }
+
+            let targetRow = document.getElementById(rowId);
+            let targetInput = targetRow.querySelector('.final-input');
+
+            // Cập nhật giá trị và tính lại (Mở tạm khóa để sửa)
+            targetInput.disabled = false;
+            targetInput.value = newScoreStr;
+            calculateKTHP(targetInput);
+            targetInput.disabled = true; // Sửa xong khóa lại ngay
+
+            targetInput.style.backgroundColor = '#fff3cd';
+            setTimeout(() => { targetInput.style.backgroundColor = '#e9ecef'; }, 2000);
+
+            document.getElementById(detailId).classList.remove('show');
+            let mailItem = document.getElementById(mailItemId);
+            mailItem.classList.add('resolved');
+            mailItem.querySelector('.text-danger').innerHTML = '<i class="bi bi-check-all"></i> Đã xử lý';
+            mailItem.querySelector('.text-danger').classList.replace('text-danger', 'text-success');
+
+            // HIỆN NÚT AI
+            let pendingMails = document.querySelectorAll('.mail-item:not(.resolved)').length;
+            let badge = document.getElementById('mailCountBadge');
+            badge.innerText = pendingMails;
+
+            if (pendingMails === 0) {
+                badge.style.display = 'none';
+                showToast('<i class="bi bi-robot me-2"></i> Đã xử lý xong toàn bộ đơn! Hệ thống mở khóa Phân tích AI.', 'bg-primary');
+                
+                let btnAi = document.getElementById('btnAnalyze');
+                btnAi.style.display = 'block';
+                btnAi.classList.add('bounce-in');
+                setTimeout(() => { toggleMailbox(); }, 1500);
+            } else {
+                showToast('<i class="bi bi-check-circle-fill me-2"></i> Cập nhật thành công! Còn ' + pendingMails + ' đơn.', 'bg-success');
+            }
+        }
+    </script>
+</body>
+</html>
